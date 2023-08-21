@@ -3,12 +3,13 @@
 ; Background is hi 4 bits, fg lo 4 bits
 ; Clear vga memory & print info if needed
 section .vga
-vga_start:
-	times 25*80*2+vga_start-$ db 0
+vga:
+	times 25*80*2+vga-$ db 0
 
 section .text
-global start
 extern long_mode_start
+global start
+
 bits 32
 
 start:
@@ -21,11 +22,8 @@ start:
 	call setup_page_tables
 	call enable_paging
 
-	lidt [idt64.pointer]
+	lgdt [gdt64r]
 
-	sti
-
-	lgdt [gdt64.pointer]
 	jmp gdt64.code_segment:long_mode_start
 
 	; ===========================================
@@ -133,19 +131,6 @@ setup_page_tables:
 	ret
 
 	; ===========================================
-	; Divide by zero
-section .isrs
-interrupt_dbz:
-	pushad
-	cld
-
-	mov ecx, err_divide_by_zero
-	jmp error
-
-	popad
-	iret
-
-	; ===========================================
 	; ECX should contain pointer to error string
 error:
 	; EBX is vga iterator
@@ -192,8 +177,6 @@ stack_bottom:
 stack_top:
 
 section .rodata
-err_divide_by_zero:
-	db "ERR: Divide by zero", 0
 err_no_cpuid:
 	db "ERR: The system does not support CPUID", 0
 err_no_multiboot:
@@ -205,43 +188,19 @@ gdt64:
 	; Always starts with zero
 	dq 0 ; zero entry
 .code_segment: equ $ - gdt64
-	; Global data table descriptor
-	; Kernel code segment
-	; Access byte flags:
-	; 	1<<43 - executable bit
-	; 	1<<44 - descriptor type bit (code or data segment); 
-	;	1<<47 - present bit
-	%define ACCESS_EXEC (1<<43)
-	%define ACCESS_CODEDATA (1<<44)
-	%define ACCESS_PRESENT (1<<47)
-
-	; Nibble flags:
-	;	1<<55 - granularity (the scale of units in the lower word specifying the size. 0 specifies bytes)
-	;	1<<53 - long mode
-	%define FLAGS_LONG (1<<53)
-	
-	dq ACCESS_EXEC | ACCESS_CODEDATA | ACCESS_PRESENT | FLAGS_LONG ; code segment
-	dq ACCESS_CODEDATA | ACCESS_PRESENT | FLAGS_LONG ; data segment second page
-.pointer:
+	dw 0
+	dw 0
+	db 0
+	db (1<<3)|(1<<4)|(1<<7) ; Executable, code segment, present
+	db (1<<5) ; Long mode
+	db 0
+.data_segment: equ $ - gdt64
+	dw 0
+	dw 0
+	db 0
+	db (1<<1)|(1<<4)|(1<<7) ; Writable, data segment, present
+	db (1<<5) ; Long mode
+	db 0
+gdt64r:
 	dw $ - gdt64 - 1
 	dq gdt64
-
-idt64:
-	%define IDT_PRESENT (1<<15)
-	%define IDT_DPL_R3 3
-	%define IDT_DPL_R0 0
-
-	; offset, flags, segment
-	%macro IDT_ENTRY 3
-		dd 0 ; reserved
-		dd ((%1 & 0xffff_ffff_0000_0000) >> 32)
-		dw ((%1 & 0xffff_0000) >> 16)
-		dw %2
-		dw %3
-		dw (%1 & 0xffff)
-	%endmacro
-
-	IDT_ENTRY 0x100000, IDT_PRESENT, 0
-.pointer:
-	dw $ - idt64 - 1
-	dq idt64

@@ -24,13 +24,6 @@ SECTIONS {
 		*(.data)
 	}
 
-	/* Read only supervisor data */
-	. = 2M;
-
-	.isrs : {
-		*(.isrs)
-	}
-
 	.rodata : {
 		*(.rodata)
 	}

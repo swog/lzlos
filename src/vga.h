@@ -17,10 +17,11 @@ typedef enum {
 	VGA_COLOR_LIGHT_MAGENTA = 13,
 	VGA_COLOR_LIGHT_BROWN = 14,
 	VGA_COLOR_WHITE = 15,
-} vga_color;
+} vga_color_e;
 
-void vga_clear(unsigned char fg, unsigned char bg);
-void vga_putc(char ch, unsigned char fg, unsigned char bg);
-void vga_puts_s(const char* str, int len, unsigned char fg, unsigned char bg);
-void vga_puts(const char* str, unsigned char fg, unsigned char bg);
-void vga_printf(unsigned char fg, unsigned char bg, const char* fmt, ...);
+void vga_color(unsigned char fg, unsigned char bg);
+void vga_clear();
+void vga_putc(char ch);
+void vga_puts_s(const char* str, int len);
+void vga_puts(const char* str);
+void vga_printf(const char* fmt, ...);
