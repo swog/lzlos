@@ -2,30 +2,34 @@
 #include "vga.h"
 #include "ktypes.h"
 
-void* kidtstubs[256];
+typedef struct kisrcall_s {
+	u64 r15;
+    u64 r14;
+    u64 r13;
+    u64 r12;
+    u64 r11;
+    u64 r10;
+    u64 r9;
+    u64 r8;
+    u64 rsi;
+    u64 rdi;
+    u64 rbp;
+    u64 rdx;
+    u64 rcx;
+    u64 rbx;
+    u64 rax;
+    u64 isr_number;
+    u64 err_code;
+    u64 rip;
+    u64 cs; 
+    u64 rflags; 
+    u64 rsp;
+    u64 ss;
+} kisrcall_t;
 
-void kidtstub() {
-	vga_puts("Hello, world");
-	asm("iret");
-}
-
-void kidtfixstub() {
-	asm("add 8, %rsp");
-	asm("iret");
-}
-
-void kpremain() {
-	for (int i = 0; i < 256; i++) {
-		kidtstubs[i] = kidtstub;
-	}
-	kidtstubs[0x8] = kidtfixstub;
-	kidtstubs[0xA] = kidtfixstub;
-	kidtstubs[0xB] = kidtfixstub;
-	kidtstubs[0xC] = kidtfixstub;
-	kidtstubs[0xD] = kidtfixstub;
-	kidtstubs[0xE] = kidtfixstub;
+void kisrhandler(kisrcall_t *info) {
 }
 
 void kmain() {
-	
+    //unsigned int num = 1/ 0;
 }
