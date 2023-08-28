@@ -1,11 +1,17 @@
 bits 64
 
-extern kmain
+extern kernel_main
+extern kernel_setup_paging
 extern idt_init
 global long_mode_start
 
 section .text
 	; ===========================================
+	; void lock_acquire(char* lock);
+	; void lock_release(char* lock);
+	; void spinlock(char* lock);
+	;
+	; A free spinlock is 0
 
 long_mode_start:
 	mov ax, 0x10
@@ -16,9 +22,10 @@ long_mode_start:
 	mov ds, ax
 
 	call idt_init
-	call kmain
+	call kernel_setup_paging
+	call kernel_main
 
-	int 49
+	;int 49
 
 	hlt
 

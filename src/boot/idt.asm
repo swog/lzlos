@@ -1,6 +1,6 @@
 bits 64
 
-extern kisrhandler
+extern kernel_isrhandler
 global idt_init
 
 %macro pushall 0
@@ -39,6 +39,7 @@ global idt_init
 	pop rax
 %endmacro
 
+    ; Must be data section. We initialize it programatically, unfortunately.
 section .data
 idt:
 	times 256 dq 0
@@ -72,7 +73,7 @@ idt_init:
 	add rbx, 16
 	add rcx, 16
 	
-	cmp rbx, idtr
+	cmp rbx, idt.end
 	jne .loop
 
 	lidt [idtr]
@@ -80,24 +81,24 @@ idt_init:
 	ret
 
 isr_handler:
-	cld
+	cld                         ; Clear direction
 	pushall
-	mov rdi, rsp
-	call kisrhandler
+	mov rdi, rsp                ; Move the stack pointer to the first argument
+	call kernel_isrhandler      ; Move to C kernel
 	popall
-	add rsp, 16
-	iretq
+	add rsp, 16                 ; Remove the 2 numbers we pushed
+	iretq                       ; Interrupt return
 
 %macro isr 1
-align 16
+align 16, db 0xcc               ; Align 16 so it can be indexed
 isr%1:
-	push 0
-	push %1
+	push 0                      ; Push 0 error
+	push %1                     ; Push ISR index
 	jmp isr_handler
 %endmacro
 
 %macro error_isr 1
-align 16
+align 16, db 0xcc
 error_isr%1:
 	push %1
 	jmp isr_handler

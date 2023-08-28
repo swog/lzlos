@@ -1,3 +1,4 @@
+bits 32
 
 ; Character high byte of word
 ; Background is hi 4 bits, fg lo 4 bits
@@ -8,9 +9,11 @@ vga:
 
 section .text
 extern long_mode_start
+extern page_table_l4
+extern page_table_l3
+extern page_table_l2
+extern page_table_l1
 global start
-
-bits 32
 
 start:
 	mov esp, stack_top
@@ -19,7 +22,7 @@ start:
 	call check_cpuid
 	call check_long_mode
 
-	call setup_page_tables
+	call setup_paging
 	call enable_paging
 
 	lgdt [gdt64r]
@@ -68,8 +71,25 @@ check_long_mode:
 	jb error
 	ret
 
+	; Setup 2MB paging for kernel setup
+setup_paging:
+	mov eax, page_table_l3
+	or eax, 0b11
+	mov dword [page_table_l4], eax
+
+	mov eax, page_table_l2
+	or eax, 0b11
+	mov dword [page_table_l3], eax
+
+	mov eax, 0
+	or eax, 0b10000011
+	mov dword [page_table_l2], eax
+
+	ret
+
 	; ===========================================
-	; Set cr3, CR4.PAE=1, IA32_EFER.LME=1, CR0.PAE=1
+	; Set CR3, CR4.PAE=1, IA32_EFER.LME=1, CR0.PAE=1
+	; CR0.PG=1,CR4.PAE=1,IA32_EFER.LME=1,CR4.LA57=0 Level 4
 enable_paging:
 	mov eax, page_table_l4
 	mov cr3, eax
@@ -92,44 +112,6 @@ enable_paging:
 	mov cr0, eax
 
 	ret
-
-	; ===========================================
-
-setup_page_tables:
-	mov eax, page_table_l3
-	or eax, 0b11 ; present, writable
-	mov [page_table_l4], eax
-
-	mov eax, page_table_l2
-	or eax, 0b11 ; present, writable
-	mov [page_table_l3], eax
-
-	mov ecx, 0 ; counter
-
-.loop:
-	; multiply eax with ecx counter
-	mov eax, 0x200000 ; 2 mb
-	mul ecx
-	; add flags
-	or eax, 0b10000011 ; present, writable, huge page
-	
-	mov [page_table_l2 + ecx * 8], eax
-
-	inc ecx
-	cmp ecx, 1
-	jne .loop
-
-	; Set second 2mb page to read only data (.text & .ro)
-	; This in conjunction with the linker will set make .text & .ro sections for the kernel
-
-	; 2 mb pages, set second page to read only
-	mov eax, 0x200000
-	or eax, 0b10000101 ; read only, present, supervisor
-
-	mov [page_table_l2 + 8], eax
-
-	ret
-
 	; ===========================================
 	; ECX should contain pointer to error string
 error:
@@ -171,6 +153,8 @@ page_table_l4:
 page_table_l3:
 	resb 4096
 page_table_l2:
+	resb 4096
+page_table_l1:
 	resb 4096
 stack_bottom:
 	resb 4096*4

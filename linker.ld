@@ -15,6 +15,10 @@ SECTIONS {
 		KEEP(*(.boot))
 	}
 
+	.text : {
+		*(.text)
+	}
+
 	/* Stack & page tables */
 	.bss : {
 		*(.bss)
@@ -26,10 +30,6 @@ SECTIONS {
 
 	.rodata : {
 		*(.rodata)
-	}
-
-	.text : {
-		*(.text)
 	}
 }
 
