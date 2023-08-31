@@ -65,31 +65,28 @@ static const char* exception_names[] = {
 	"FPU error"
 };
 
-extern u32 *page_table_l4;
-extern u32 *page_table_l3;
-extern u32 *page_table_l2;
-extern u32 *page_table_l1;
+typedef PACKED struct kpagetable_s {
+	u32 pml4[1024];
+	u32 directory_ptr[1024];
+	u32 directory[1024];
+	u32 table[1024];
+} kpagetable_t;
 
-void kernel_setup_paging() {
-	u32 addr;
+extern kpagetable_t *page_table_l4;
 
-	addr = (u32)page_table_l3;
-	page_table_l4[0] = addr | 0b11;
-
-	addr = (u32)page_table_l2;
-	page_table_l3[0] = addr | 0b11;
-	
-	addr = (u32)page_table_l1;
-	page_table_l2[0] = addr | 0b11;
-
-	addr = 0;
-	page_table_l1[0] = addr | 0b10000011;
+void kernel_setup_paging(kpagetable_t *pagetable) {
+	u32 physical = 0;
+	for (int i = 0; i < 1024; i++) {
+		pagetable->directory[i] = (u32)&pagetable->table[i] | 0b11;
+		pagetable->table[i] = physical | 0b10000011;
+		physical += 0x1000;
+	}
 }
 
 void kernel_isrhandler(kisrcall_t *info) {
 	if (info->isr_number < 32) {
 		vga_printf("Fatal exception: %s\n", exception_names[info->isr_number]);
-		
+
 		asm("hlt");
 	}
 

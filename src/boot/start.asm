@@ -10,9 +10,6 @@ vga:
 section .text
 extern long_mode_start
 extern page_table_l4
-extern page_table_l3
-extern page_table_l2
-extern page_table_l1
 global start
 
 start:
@@ -69,18 +66,22 @@ check_long_mode:
 	mov ecx, err_no_long_mode
 	cmp eax, 0x80000001
 	jb error
+
 	ret
 
 	; Setup 2MB paging for kernel setup
 setup_paging:
+	; PML4
 	mov eax, page_table_l3
 	or eax, 0b11
 	mov dword [page_table_l4], eax
 
+	; Directory Ptr
 	mov eax, page_table_l2
 	or eax, 0b11
 	mov dword [page_table_l3], eax
 
+	; Directory
 	mov eax, 0
 	or eax, 0b10000011
 	mov dword [page_table_l2], eax
@@ -112,6 +113,7 @@ enable_paging:
 	mov cr0, eax
 
 	ret
+
 	; ===========================================
 	; ECX should contain pointer to error string
 error:

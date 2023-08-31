@@ -11,7 +11,7 @@ $(as_objfiles): bin/%.o : src/%.asm
 
 $(c_objfiles): bin/%.o : src/%.c
 	mkdir -p $(dir $@) && \
-	gcc -g -ggdb -c -Wall -std=gnu99 -fno-stack-protector $(patsubst bin/%.o, src/%.c, $@) -o $@ && \
+	gcc -c -Wall -std=gnu99 -fno-stack-protector $(patsubst bin/%.o, src/%.c, $@) -o $@ && \
 	touch $(patsubst bin/%.i, src/%.c, $@)
 
 .PHONY: build

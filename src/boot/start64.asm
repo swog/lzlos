@@ -2,6 +2,7 @@ bits 64
 
 extern kernel_main
 extern kernel_setup_paging
+extern page_table_l4
 extern idt_init
 global long_mode_start
 
@@ -22,6 +23,7 @@ long_mode_start:
 	mov ds, ax
 
 	call idt_init
+	mov rdi, page_table_l4
 	call kernel_setup_paging
 	call kernel_main
 
