@@ -1,6 +1,7 @@
 bits 64
 
 extern kernel_isrhandler
+extern page_table_l4
 global idt_init
 
 %macro pushall 0

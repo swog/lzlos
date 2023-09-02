@@ -11,6 +11,8 @@ section .text
 extern long_mode_start
 extern page_table_l4
 global start
+global gdt64
+global stack_top
 
 start:
 	mov esp, stack_top
@@ -82,8 +84,7 @@ setup_paging:
 	mov dword [page_table_l3], eax
 
 	; Directory
-	mov eax, 0
-	or eax, 0b10000011
+	mov eax, 0b10000011
 	mov dword [page_table_l2], eax
 
 	ret
@@ -158,6 +159,8 @@ page_table_l2:
 	resb 4096
 page_table_l1:
 	resb 4096
+
+align 4096
 stack_bottom:
 	resb 4096*4
 stack_top:
@@ -186,6 +189,13 @@ gdt64:
 	db 0
 	db (1<<1)|(1<<4)|(1<<7) ; Writable, data segment, present
 	db (1<<5) ; Long mode
+	db 0
+.tss_segment: equ $ - gdt64
+	dw 0
+	dw 0
+	db 0
+	db (1<<0)|(1<<3)|(1<<7)
+	db (1<<5)
 	db 0
 gdt64r:
 	dw $ - gdt64 - 1

@@ -17,6 +17,7 @@ typedef struct kisrcall_s {
     u64 rdx;
     u64 rcx;
     u64 rbx;
+	u64 cr3;
     u64 rax;
     u64 isr_number;
     u64 err_code;
@@ -65,22 +66,30 @@ static const char* exception_names[] = {
 	"FPU error"
 };
 
-typedef PACKED struct kpagetable_s {
-	u32 pml4[1024];
-	u32 directory_ptr[1024];
-	u32 directory[1024];
-	u32 table[1024];
-} kpagetable_t;
+void set_cr3(void *pagetable);
 
-extern kpagetable_t *page_table_l4;
+static ALIGNED(4096) u32 pml4[1];
+static ALIGNED(4096) u32 directory_ptr[1];
+static ALIGNED(4096) u32 directory[2];
+static ALIGNED(4096) u32 table0[256];
+static ALIGNED(4096) u32 table1[256];
 
-void kernel_setup_paging(kpagetable_t *pagetable) {
-	u32 physical = 0;
-	for (int i = 0; i < 1024; i++) {
-		pagetable->directory[i] = (u32)&pagetable->table[i] | 0b11;
-		pagetable->table[i] = physical | 0b10000011;
-		physical += 0x1000;
+void kernel_setup_paging() {
+	pml4[0] = (u32)directory_ptr | 0b11;
+	directory_ptr[0] = (u32)directory | 0b11;
+	directory[0] = (u32)table0 | 0b11;
+	directory[1] = (u32)table1 | 0b11;
+
+	u32 physical0 = 0, physical1 = 0x100000;
+	for (int i = 0; i < 256; i++) {
+		table0[i] = physical0 | 0b11;
+		table1[i] = physical1 | 0b11;
+
+		physical0 += 0x1000;
+		physical1 += 0x1000;
 	}
+
+	set_cr3(pml4);
 }
 
 void kernel_isrhandler(kisrcall_t *info) {
@@ -94,5 +103,6 @@ void kernel_isrhandler(kisrcall_t *info) {
 }
 
 void kernel_main() {
+	vga_printf("%p\n", kernel_main);
 	vga_puts("Hello, world\n");
 }
