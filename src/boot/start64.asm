@@ -2,12 +2,6 @@ bits 64
 
 extern kernel_main
 extern kernel_setup_paging
-extern page_table_l4
-extern idt_init
-extern gdt64
-extern stack_top
-global long_mode_start
-global set_cr3
 
 section .text
 	; ===========================================
@@ -16,10 +10,15 @@ section .text
 	; void spinlock(char* lock);
 	;
 	; A free spinlock is 0
+global set_cr3
 set_cr3:
 	mov cr3, rdi
 	ret
 
+extern tss
+extern idt_init
+extern gdt64
+global long_mode_start
 long_mode_start:
 	mov ax, 0x10
 	mov ss, ax
@@ -28,12 +27,21 @@ long_mode_start:
 	mov gs, ax
 	mov ds, ax
 
-	mov ax, 0x18
-	ltr ax
+	; Load task state register (broken)
+	mov rax, gdt64+0x18
+	mov rbx, tss
+	mov word [rax+2], bx
+	shr rbx, 16
+	mov byte [rax+4], bl
+	mov byte [rax+7], bh
 
-	jmp $
+	mov ax, 0x18
+	;ltr ax
 
 	call idt_init
+
+	;sti
+
 	call kernel_setup_paging
 	call kernel_main
 

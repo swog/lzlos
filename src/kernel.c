@@ -17,7 +17,6 @@ typedef struct kisrcall_s {
     u64 rdx;
     u64 rcx;
     u64 rbx;
-	u64 cr3;
     u64 rax;
     u64 isr_number;
     u64 err_code;
@@ -29,28 +28,28 @@ typedef struct kisrcall_s {
 } kisrcall_t;
 
 static const char* exception_names[] = {
-	"Divide by zero",
-	"Debug",
-	"NMI",
+	"Divide Error",
+	"Debug Exception",
+	"Nonmaskable external interrupt",
 	"Breakpoint",
 	"Overflow",
 	"Bound Range Exceeded",
 	"Invaild Opcode",
 	"Device Not Available", 
-	"Double fault", 
+	"Double Fault", 
 	"Co-processor Segment Overrun",
 	"Invaild TSS",
-	"Segment not present",
+	"Segment Not Present",
 	"Stack-Segment Fault",
-	"GPF",
+	"General Protection",
 	"Page Fault",
 	"Reserved",
 	"x87 Floating Point Exception",
-	"allignement check",
-	"Machine check",
-	"SIMD floating-point exception",
+	"Alignment Check",
+	"Machine Check",
+	"SIMD Floating-Point Exception",
 	"Virtualization Excpetion",
-	"Deadlock",
+	"Control Protection Exception",
 	"Reserved",
 	"Reserved",
 	"Reserved",
@@ -60,40 +59,44 @@ static const char* exception_names[] = {
 	"Reserved",
 	"Reserved",
 	"Reserved",
-	"Security Exception",
-	"Reserved",
-	"Triple Fault",
-	"FPU error"
+	
+	// Kernel-defined exceptions
 };
 
 void set_cr3(void *pagetable);
 
-static ALIGNED(4096) u32 pml4[1];
-static ALIGNED(4096) u32 directory_ptr[1];
-static ALIGNED(4096) u32 directory[2];
-static ALIGNED(4096) u32 table0[256];
-static ALIGNED(4096) u32 table1[256];
+static ALIGNED(4096) u64 pml4[256];
+static ALIGNED(4096) u64 directory_ptr[256];
+static ALIGNED(4096) u64 directory[256];
+static ALIGNED(4096) u64 table[512];
 
 void kernel_setup_paging() {
-	pml4[0] = (u32)directory_ptr | 0b11;
-	directory_ptr[0] = (u32)directory | 0b11;
-	directory[0] = (u32)table0 | 0b11;
-	directory[1] = (u32)table1 | 0b11;
+	pml4[0] = (u64)directory_ptr | 0b11;
+	pml4[255] = (u64)directory_ptr | 0b11;
 
-	u32 physical0 = 0, physical1 = 0x100000;
-	for (int i = 0; i < 256; i++) {
-		table0[i] = physical0 | 0b11;
-		table1[i] = physical1 | 0b11;
+	directory_ptr[0] = (u64)directory | 0b11;
+	directory_ptr[255] = (u64)directory | 0b11;
+	directory[0] = (u64)table | 0b11;
 
-		physical0 += 0x1000;
-		physical1 += 0x1000;
+	u64 physical = 0x100000;
+
+	// Map upper 0x100_000 kernel start
+	for (int i = 256; i < 512; i++) {
+		table[i] = physical | 0b11;
+		physical += 0x1000;
 	}
 
+	// Map 0xb8000 VGA
+	table[0xb8] = 0xb8000 | 0b11;
+
 	set_cr3(pml4);
+
+	*(u16*)0x7f80000b8000 = ' a';
+	asm("hlt");
 }
 
 void kernel_isrhandler(kisrcall_t *info) {
-	if (info->isr_number < 32) {
+	if (info->isr_number < sizeof(exception_names)/sizeof(exception_names[0])) {
 		vga_printf("Fatal exception: %s\n", exception_names[info->isr_number]);
 
 		asm("hlt");

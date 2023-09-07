@@ -8,12 +8,9 @@ vga:
 	times 25*80*2+vga-$ db 0
 
 section .text
-extern long_mode_start
-extern page_table_l4
-global start
-global gdt64
-global stack_top
 
+extern long_mode_start
+global start
 start:
 	mov esp, stack_top
 
@@ -104,8 +101,8 @@ enable_paging:
 	; IA32_EFER extended features
 	mov ecx, 0xC0000080
 	rdmsr
-	; .LME long mode enable
-	or eax, 1 << 8
+	; .LME long mode enable & no-exec
+	or eax, (1<<8);|(1<<11)
 	wrmsr
 
 	; Enable paging flag 1<<31 in cr0
@@ -151,6 +148,7 @@ error:
 	; pg. 3117
 section .bss
 align 4096
+global page_table_l4
 page_table_l4:
 	resb 4096
 page_table_l3:
@@ -173,6 +171,8 @@ err_no_multiboot:
 err_no_long_mode:
 	db "ERR: No long mode supported", 0
 
+section .data
+global gdt64
 gdt64:
 	; Always starts with zero
 	dq 0 ; zero entry
@@ -190,13 +190,32 @@ gdt64:
 	db (1<<1)|(1<<4)|(1<<7) ; Writable, data segment, present
 	db (1<<5) ; Long mode
 	db 0
+	; 0x18
 .tss_segment: equ $ - gdt64
-	dw 0
+	dw 108
 	dw 0
 	db 0
-	db (1<<0)|(1<<3)|(1<<7)
-	db (1<<5)
+	db 0x9 | (1<<7) ; Available TSS type, present
+	db 0
 	db 0
 gdt64r:
 	dw $ - gdt64 - 1
 	dq gdt64
+
+global tss
+tss:
+	dd 0 ; Reserved
+	dq stack_top ; Rsp0
+	dq stack_top ; Rsp1
+	dq stack_top ; Rsp2
+	dq 0 ; Reserved
+	dq stack_top ; Ist1
+	dq stack_top ; Ist2
+	dq stack_top ; Ist3
+	dq stack_top ; Ist4
+	dq stack_top ; Ist5
+	dq stack_top ; Ist6
+	dq stack_top ; Ist7
+	dq 0 ; Reserved
+	dd 0 ; IOPB
+.end:
