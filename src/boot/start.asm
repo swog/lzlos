@@ -1,18 +1,16 @@
 bits 32
 
-; Character high byte of word
-; Background is hi 4 bits, fg lo 4 bits
-; Clear vga memory & print info if needed
-section .vga
-vga:
-	times 25*80*2+vga-$ db 0
-
 section .text
 
 extern long_mode_start
 global start
 start:
 	mov esp, stack_top
+	
+	; Save the physical address of the multiboot2 structure
+	push ebx
+	
+	call clear
 
 	call check_multiboot
 	call check_cpuid
@@ -23,7 +21,27 @@ start:
 
 	lgdt [gdt64r]
 
+	; Can't pop 32 bit ebx in 64 bit
+	pop ebx
+	
 	jmp gdt64.code_segment:long_mode_start
+
+clear:
+	push eax
+
+	mov ecx, 0xb8000
+	mov eax, 30*80
+	
+.loop:
+	mov word [ecx+eax], 0
+
+	sub eax, 2
+	jnz .loop
+
+	mov word [ecx], 0
+
+	pop eax
+	ret
 
 	; ===========================================
 	; GNU Grub should set EAX to 0x36d76289 magic number
@@ -65,6 +83,12 @@ check_long_mode:
 	mov ecx, err_no_long_mode
 	cmp eax, 0x80000001
 	jb error
+
+	mov eax, 0x80000001
+	cpuid
+	mov ecx, err_no_long_mode
+	test edx, (1<<29)
+	jz error
 
 	ret
 
@@ -112,35 +136,29 @@ enable_paging:
 
 	ret
 
-	; ===========================================
-	; ECX should contain pointer to error string
-error:
-	; EBX is vga iterator
+	; ECX - error string
+	; AX - 
+print:
 	mov ebx, 0xb8000
-
-	; Set background to 0
-	; Set foreground to green
 	xor ah, ah
 	or ah, 2
 .loop:
-	; EAX is current character
-	mov al, [ecx]
+	mov al, byte [ecx]
 	test al, al
 	jz .end
+	
+	mov word [ebx], ax
+	add ebx, 2
 
-	; Set character (hi byte)
-	mov byte [ebx], al
-	inc ebx
-	; Set color (lo byte)
-	mov byte [ebx], ah
-	inc ebx
-
-	; Increment 1 ch
 	inc ecx
-
 	jmp .loop
-
 .end:
+	ret
+
+	; ===========================================
+	; ECX should contain pointer to error string
+error:
+	call print
 	cli
 	hlt
 
@@ -165,11 +183,11 @@ stack_top:
 
 section .rodata
 err_no_cpuid:
-	db "ERR: The system does not support CPUID", 0
+	db "ERR: The system does not support CPUID! Haulting.", 0
 err_no_multiboot:
-	db "ERR: Not GNU grub multiboot", 0
+	db "ERR: The bootloader used to boot this medium is not GNU Grub! Haulting.", 0
 err_no_long_mode:
-	db "ERR: No long mode supported", 0
+	db "ERR: Your system does not support 64 bit long mode! Haulting.", 0
 
 section .data
 global gdt64

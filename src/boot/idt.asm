@@ -78,7 +78,6 @@ idt_init:
 	jne .loop
 
 	lidt [idtr]
-	;sti
 	ret
 
 isr_handler:
@@ -96,6 +95,7 @@ isr%1:
 	push 0                      ; Push 0 error
 	push %1                     ; Push ISR index
 	jmp isr_handler
+	int3
 %endmacro
 
 %macro error_isr 1
@@ -103,6 +103,7 @@ align 16, db 0xcc
 error_isr%1:
 	push %1
 	jmp isr_handler
+	int3
 %endmacro
 
 isr 0

@@ -1,7 +1,7 @@
 
 #include <stdarg.h>
 #include "vga.h"
-#include "ktypes.h"
+#include "kdefs.h"
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
