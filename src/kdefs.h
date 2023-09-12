@@ -38,10 +38,16 @@ typedef struct kisrcall_s {
 	u64 ss;
 } kisrcall_t;
 
+typedef void kisr_handler(kisrcall_t *info);
+
 void set_cr3(void *pagetable);
 void set_cr8(void *cr8);
 
 // Enable maskable interrupts
 void set_interrupts();
 
+// Get current process level
+int get_cpl();
 
+// Hault the machine
+void panic(const char *str);

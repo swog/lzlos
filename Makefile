@@ -24,3 +24,7 @@ build: $(objfiles)
 clean:
 	rm -f -R bin && \
 	rm -f lzlos.iso
+
+.PHONY: run
+run:
+	qemu-system-x86_64 -cdrom lzlos.iso

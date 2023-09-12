@@ -1,0 +1,1 @@
+Kernel cheat: Add an interrupt vector to a location in the kernel where a function calls a data pointer. Overwrite data pointer to my code.

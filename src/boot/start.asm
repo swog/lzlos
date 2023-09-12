@@ -108,6 +108,8 @@ setup_paging:
 	mov eax, 0b10000011
 	mov dword [page_table_l2], eax
 
+	mov dword [page_table_l2+8], eax
+
 	ret
 
 	; ===========================================

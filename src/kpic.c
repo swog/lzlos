@@ -1,4 +1,5 @@
 #include "kpic.h"
+#include "kdefs.h"
 
 // Set the PIC's maskable interrupt's interrupt vector bases
 // These are set to 0x20, the first user-defined interrupt vectors
