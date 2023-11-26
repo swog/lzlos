@@ -71,10 +71,6 @@ void kernel_isrhandler(kisrcall_t *info) {
 		kps2_irq(info);
 	}
 
-	if (info->isr_number == INT_PANIC) {
-		panic_irq(info);
-	}
-
 	io_eoi(info->isr_number-IRQ_TIMER);
 }
 
@@ -94,19 +90,24 @@ void kernel_main(int mbi) {
 
 	mm_init();
 
+	//int *num = (int*)0x200000;
+	//*num = 10;
+
+	//vga_printf("%d\n", *num);
+
 	void *m0 = kalloc(4096);
 
 	vga_printf("%p\n", m0);
 
-	kfree(m0);
+	//kfree(4096, m0);
 
-	m0 = kalloc(4096);
-	void *m1 = kalloc(4096);
+	//m0 = kalloc(2048);
+	//void *m1 = kalloc(2048);
 
-	vga_printf("%p,%p\n", m0, m1);
+	//vga_printf("%p,%p\n", m0, m1);
 
-	kfree(m0);
-	kfree(m1);
+	//kfree(2048, m0);
+	//kfree(2048, m1);
 }
 
 

@@ -51,3 +51,11 @@ int get_cpl();
 
 // Hault the machine
 void panic(const char *str);
+
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(x) (sizeof(x) / sizeof(x[0]))
+#endif
+
+#ifndef NULL
+#define NULL ((void*)0)
+#endif

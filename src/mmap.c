@@ -1,95 +1,224 @@
+//===============================================
+// Kernel Memory Mapper
+// 
+// 	Currently two linked lists containing 
+// used and free pages. Fragmentation is somewhat
+// managed. Speed is a concern for allocation
+// and freeing. 
+//
+// void *kalloc(unsigned int size);
+// void kfree(void *block);
+//
+// 	User allocations should be quicker when
+// implemented.
+//===============================================
+
+#include "alloc.h"
+#include "hmap.h"
 #include "mmap.h"
 #include "kdefs.h"
 #include "vga.h"
 
 typedef struct page_s {
-	unsigned int size;
-	char data[0];
+	unsigned int	base;
+	unsigned int 	msb;
+	// Indices
+	unsigned int 	next;
+	unsigned int 	prev;
 } page_t;
 
-#define PAGE_USED (1<<31)
-#define PAGE_COUNT 256
-#define PAGE_BASE 0x200000
-#define PAGE_MAX 0x400000
-#define PAGE_BIG 0x1000
+page_t pages_list[512];
 
-page_t *pages = (page_t*)PAGE_BASE;
+// Pointer->page index map
+hmap_t			reverse_map;
+hmap_bucket_t* 	reverse_buckets[251];
 
-void mm_init() {
-	pages->size = 0;
+//===============================================
+// TODO: Sort these into binary trees ranked by address
+// OR we can use hash maps
+// Currently, they're just linked lists
+//===============================================
+unsigned int pages_used[] = {
+	-1, // 8
+	-1, // 16
+	-1, // 32
+	-1, // 64
+	-1,	// 128
+	-1, // 256
+	-1,	// 512
+	-1, // 1024
+	-1, // 2048
+	-1, // 4096
+	-1, // 8192
+};
+
+unsigned int pages_free[] = {
+	-1, // 8
+	-1, // 16
+	-1, // 32
+	-1, // 64
+	-1,	// 128
+	-1, // 256
+	-1,	// 512
+	-1, // 1024
+	-1, // 2048
+	-1, // 4096
+	-1, // 8192
+};
+
+unsigned int pages_open = 0;
+unsigned int pages_addr = 0x200000;
+
+//===============================================
+// Allocate new page to a base address & size
+//===============================================
+unsigned int pages_new(unsigned int base, unsigned int msb) {
+	unsigned int page = pages_open++;
+
+	pages_list[page].base = base;
+	pages_list[page].msb = msb;
+
+	return page;
 }
 
-static inline void pagefree(page_t *page) {
-	page->size &= ~PAGE_USED;
-}
-
-static inline int pagesize(page_t *page) {
-	return page->size & ~PAGE_USED;
-}
-
-static inline int ispageused(page_t *page) {
-	return page->size & PAGE_USED;
-}
-
-static inline int isbigpage(page_t *page) {
-	return pagesize(page) >= PAGE_BIG;
-}
-
-void *kalloc(int size) {
-	unsigned long long addr = PAGE_BASE;
-	int i;
-	page_t *page;
-
-	for (i = 0; i < PAGE_COUNT; i++) {
-		// It can be equal to the page maximum
-		if (addr + size + sizeof(page_t) >= PAGE_MAX) {
-			return (void*)0;
-		}
-
-		page = (page_t*)addr;		
-
-		// Last page
-		if ( !page->size ) {
-			break;
-		}
-
-		// Page not used, and not last page
-		if ( !ispageused(page) ) {
-			// If it is a big page, do not size up
-			if ( isbigpage(page) ) {
-				if ( page->size  == size ) {
-					page->size |= PAGE_USED;
-					return page->data;
-				}
-			}
-			// If it is greater or equal, size up
-			else if ( page->size >= size ) {
-				page->size |= PAGE_USED;
-				return page->data;
-			}
-		}
-
-		addr += pagesize(page) + sizeof(page_t);
+//===============================================
+// Insert page to head pointer
+//
+// Head is an index into the `pages_list`, so is `page`
+//===============================================
+void pages_insert(unsigned int *head, unsigned int page) {
+	pages_list[page].next = *head;
+	pages_list[page].prev = -1;
+		
+	if (*head != -1) {
+		pages_list[*head].prev = page;
 	}
 
-	// Maximum pages
-	if (i >= PAGE_COUNT) {
-		return (void*)0;
-	}
-
-	page->size = size | PAGE_USED;
-
-	// Set the next page to a break
-	if (i + 1 < PAGE_COUNT && addr + size + sizeof(page_t) < PAGE_MAX) {
-		addr += size + sizeof(page_t);
-		page_t *next_page = (page_t*)addr;
-		next_page->size = 0;
-	}
-
-	return page->data;
+	*head = page;
 }
 
+//===============================================
+// Remove a page from the given list `head`
+//===============================================
+void pages_remove(unsigned int *head, unsigned int page) {
+	if (pages_list[page].prev == -1) {
+		*head = pages_list[page].next;
+		
+		if (*head != -1) {
+			pages_list[*head].prev = -1;
+		}
+	}
+	else {
+		pages_list[pages_list[page].prev].next = pages_list[page].next;
+		
+		if (pages_list[page].next != -1) {
+			pages_list[pages_list[page].next].prev = pages_list[page].prev;
+		}
+	}
+
+	// No double free
+	// Speed up searches
+	hmap_remove(&reverse_map, pages_list[page].base);
+}
+
+static unsigned int mm_hash(const void* key) {
+	return (unsigned int)(unsigned long long)key;
+}
+
+static int mm_cmp(const void *a, const void *b) {
+	return (int)(unsigned long long)(a-b);
+}
+
+// Memory manager init
+void mm_init() { 	
+	hmap_init(
+		&reverse_map, 
+		ARRAYSIZE(reverse_buckets), // number of buckets
+		0,							// don't allocate buckets 
+		kalloc, 
+		kfree, 
+		mm_hash, mm_cmp
+	);
+	reverse_map.list = reverse_buckets;
+}
+
+#include "vga.h"
+
+static unsigned int kpow(unsigned int base, unsigned int power) {
+	while (power) {
+		base *= base;
+		power--;
+	}
+	return base;
+}
+
+static unsigned int klog(unsigned int num, unsigned int base) {
+	unsigned int power = 0;
+	while (num) {
+		num /= base;
+		power++;
+	}
+	return power;
+}
+
+//===============================================
+// Allocate a new page
+//===============================================
+unsigned int pages_use(unsigned int msb) {
+	unsigned int page;
+
+	if (pages_free[msb] == -1) {
+		page = pages_new(pages_addr, msb);
+		pages_addr += kpow(2, msb+3);
+	}
+	else {
+		page = pages_free[msb];
+		pages_remove(&pages_free[msb], page);
+	}
+	
+	// Page insertions do not add a reverse mapping
+	pages_insert(&pages_used[msb], page);
+	
+	// Add reverse map
+	hmap_insert(&reverse_map, pages_list[page].base, page);
+
+	return page;
+}
+
+//===============================================
+// Kernel allocator
+// O(n) free pages if size > all pages
+//===============================================
+void *kalloc(unsigned int size) {
+	unsigned int msb = klog(size, 2)-2;
+	
+	unsigned int page = pages_use(msb);
+
+	if (page == -1) {
+		return NULL;
+	}
+
+	return (void*)pages_list[page].base;
+}
+
+//===============================================
+// Kernel deallocator
+// O(n) if all pages are mapped to one bucket
+// O(1) average if hmap uses prime bucket count
+//===============================================
 void kfree(void *base) {
-	page_t *page = (page_t*)((unsigned long long)base - sizeof(page_t));
-	pagefree(page);
+	unsigned int page = hmap_at(&reverse_map, base);
+	
+	// TODO: Need to get size index
+	pages_remove(&pages_used[pages_list[page].msb], page);
+
+	// Remove reverse map
+	hmap_remove(&reverse_map, pages_list[page].base);
 }
+
+
+
+
+
+
+

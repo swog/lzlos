@@ -3,5 +3,5 @@
 
 void mm_init();
 
-void *kalloc(int size);
+void *kalloc(unsigned int size);
 void kfree(void *block);

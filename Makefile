@@ -28,3 +28,4 @@ clean:
 .PHONY: run
 run:
 	qemu-system-x86_64 -cdrom lzlos.iso
+
