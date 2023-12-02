@@ -59,7 +59,7 @@ section .text
 
 idt_init:
 	mov rbx, idt
-	lea rcx, isr0
+	mov rcx, isr0
 .loop:
 	mov rax, rcx
 	

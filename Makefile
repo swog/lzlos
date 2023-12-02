@@ -6,17 +6,15 @@ objfiles := $(as_objfiles) $(c_objfiles)
 
 $(as_objfiles): bin/%.o : src/%.asm
 	mkdir -p $(dir $@) && \
-	nasm -f elf64 $(patsubst bin/%.o, src/%.asm, $@) -o $@ && \
-	touch $(patsubst bin/%.o, src/%.asm, $@)
+	nasm -f elf64 $(patsubst bin/%.o, src/%.asm, $@) -o $@
 
 $(c_objfiles): bin/%.o : src/%.c
 	mkdir -p $(dir $@) && \
-	gcc -c -Wall -std=gnu99 -fno-stack-protector $(patsubst bin/%.o, src/%.c, $@) -o $@ && \
-	touch $(patsubst bin/%.i, src/%.c, $@)
+	./x86_64-linux/bin/gcc -c -Wall -std=gnu99 -fno-stack-protector $(patsubst bin/%.o, src/%.c, $@) -o $@
 
 .PHONY: build
 build: $(objfiles)
-	ld -n -o bin/kernel.bin -T linker.ld $(objfiles) && \
+	./x86_64-linux/bin/gcc -n -o bin/kernel.bin -T linker.ld $(objfiles) && \
 	cp bin/kernel.bin iso/boot/kernel.bin && \
 	grub-mkrescue -o lzlos.iso iso
 
