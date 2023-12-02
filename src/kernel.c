@@ -83,31 +83,17 @@ void kernel_main(int mbi) {
 	
 	// Mask interrupts that aren't handled
 	pic_mask(PIC_MASTER_DATA, ~2);
+	// No slave data will be rececived.
 	pic_mask(PIC_SLAVE_DATA, ~0);
 
 	// Enable maskable interrupts
-	set_interrupts();
+	set_interrupts();	
 
-	mm_init();
+	int* buf = kalloc(4);
+	kfree(buf);
+	int* buf1 = kalloc(4);
 
-	//int *num = (int*)0x200000;
-	//*num = 10;
-
-	//vga_printf("%d\n", *num);
-
-	void *m0 = kalloc(4096);
-
-	vga_printf("%p\n", m0);
-
-	//kfree(4096, m0);
-
-	//m0 = kalloc(2048);
-	//void *m1 = kalloc(2048);
-
-	//vga_printf("%p,%p\n", m0, m1);
-
-	//kfree(2048, m0);
-	//kfree(2048, m1);
+	vga_printf("%p %p\n", buf, buf1);
 }
 
 

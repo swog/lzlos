@@ -54,7 +54,7 @@ void kps2_irq(kisrcall_t *info) {
 				}
 			}
 			else {
-				vga_putc('?');
+				//vga_putc('?');
 			}
 	}
 }

@@ -108,6 +108,7 @@ setup_paging:
 	mov eax, 0b10000011
 	mov dword [page_table_l2], eax
 
+	; Kernel heap base
 	or eax, 0x200000
 	mov dword [page_table_l2+8], eax
 

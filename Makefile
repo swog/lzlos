@@ -29,3 +29,8 @@ clean:
 run:
 	qemu-system-x86_64 -cdrom lzlos.iso
 
+.PHONY: test
+test:
+	gcc -Wall -std=gnu99 -D DEBUG src/mmap.c -o bin/test/a.out && \
+	./bin/test/a.out
+
