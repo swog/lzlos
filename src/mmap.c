@@ -6,7 +6,6 @@
 //
 //===============================================
 
-#include "alloc.h"
 #include "mmap.h"
 #include "kdefs.h"
 #include "vga.h"

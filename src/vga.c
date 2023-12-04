@@ -36,7 +36,8 @@ static vga_char_t vga_char(char ch) {
         .ch = ch,
         .clr = vga_info.clr
     };
-    return vgc;
+
+   return vgc;
 }
 
 void vga_color(unsigned char fg, unsigned char bg) {
@@ -56,14 +57,17 @@ void vga_putc(char ch) {
 		vga_char_t* vgc = &vga_info.buf[vga_info.col*VGA_WIDTH+vga_info.row];
 		vgc->ch = vgc->clr = 0;
 		vga_info.row = 0;
+	
 		if (++vga_info.col >= VGA_HEIGHT) {
 			vga_info.col = 0;
 		}
+	
 		return;
 	}
 
-    vga_char_t vgc = vga_char(ch);
+ 	vga_char_t vgc = vga_char(ch);
 	vga_info.buf[vga_info.col*VGA_WIDTH+vga_info.row] = vgc;
+	
 	if (++vga_info.row >= VGA_WIDTH) {
 		vga_info.row = 0;
 		if (++vga_info.col >= VGA_HEIGHT) {
@@ -72,86 +76,11 @@ void vga_putc(char ch) {
 	}
 }
 
-void vga_puts_s(const char* str, int len) {
-	for (int i = 0; i < len; i++) {
-		vga_putc(str[i]);
-	}
-}
-
 void vga_puts(const char* str) {
 	while (*str) {
-		vga_putc(*(str++));
+		vga_putc(*str);
+		str++;
 	}
 }
 
-static const char hexm[] = "0123456789abcdef";
 
-static void vga_puta(const void* ptr, int size) {
-	char byte;
-	for (int i = size-1; i >= 0; i--) {
-		byte = ((char*)ptr)[i];
-		vga_putc(hexm[(byte & 0xf0) >> 4]);
-		vga_putc(hexm[byte & 0xf]);
-	}
-}
-
-static void vga_putx(unsigned n) {
-	char byte;
-	char front = 1;
-	for (int i = sizeof(n)-1; i >= 0; i--) {
-		byte = ((char*)&n)[i];
-		if (!front) {
-			vga_putc(hexm[(byte & 0xf0) >> 4]);
-			vga_putc(hexm[byte & 0xf]);
-			continue;
-		}
-		else if (byte) {
-			front = 0;
-			// still leading zero
-			if ((byte & 0xf0) >> 4) {
-				vga_putc(hexm[(byte & 0xf0) >> 4]);
-			}
-			vga_putc(hexm[byte & 0xf]);
-		}
-	}
-}
-
-void vga_printf(const char* format, ...) {
-	va_list ap;
-	va_start(ap, format);
-	while (*format) {
-		if (format[0] == '%') {
-			switch (format[1]) {
-				case 'p': {
-					const void* ptr = va_arg(ap, void*);
-					vga_puta(&ptr, sizeof(ptr));
-				} break;
-				case 's': {
-					const char* s = va_arg(ap, const char*);
-					vga_puts(s);
-				} break;
-				case 'x': {
-					unsigned int num = va_arg(ap, int);
-					vga_putx(num);
-				} break;
-				case 'i': {
-					//int num = va_arg(ap, int);
-					
-				} break;
-				case 'c': {
-					char ch = (char)va_arg(ap, int);
-					vga_putc(ch);
-				} break;
-				case '%': {
-					vga_putc('%');
-				} break;
-			}
-			format++;
-		}
-		else {
-			vga_putc(*format);
-		}
-		format++;
-	}
-	va_end(ap);
-}

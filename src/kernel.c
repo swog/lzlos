@@ -1,5 +1,5 @@
 
-#include "vga.h"
+#include <stdio.h>
 #include "kdefs.h"
 #include "kpic.h"
 #include "kbd.h"
@@ -50,7 +50,6 @@ static const char* exception_names[] = {
 // Handle all ISRs from the IDT
 void kernel_isrhandler(kisrcall_t *info) {
 	if (info->isr_number < sizeof(exception_names)/sizeof(exception_names[0])) {
-		vga_printf("Fatal Exception: %s\n", exception_names[info->isr_number]);
 		asm("hlt");
 	}
 	
@@ -73,11 +72,7 @@ void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
-	int* buf = kalloc(4);
-	kfree(buf);
-	int* buf1 = kalloc(4);
-
-	vga_printf("%p %p\n", buf, buf1);
+	puts("hello crt0!");
 }
 
 

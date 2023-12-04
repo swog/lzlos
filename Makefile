@@ -2,9 +2,11 @@ AS := nasm
 AS_FLAGS := -f elf64
 
 CC := gcc
-CC_FLAGS := -Wall -fno-stack-protector
+CC_FLAGS := -nolibc -Wall -fno-stack-protector
 
 LNK := ld
+
+AR := ar
 
 AS_FILES := $(shell find src/boot -maxdepth 1 -name *.asm)
 AS_OBJS := $(patsubst src/%.asm, bin/%.o, $(AS_FILES))
@@ -14,7 +16,7 @@ C_OBJS := $(patsubst src/%.c, bin/%.o, $(C_FILES))
 LIBC_FILES := $(shell find src/libc -name *.c)
 LIBC_OBJS := $(patsubst src/%.c, bin/%.o, $(LIBC_FILES))
 
-KLIBS := -L bin/crt0.so
+KLNK_FLAGS := -T linker.ld -nostdlib -znodefaultlib -Lbin -lc
 
 $(AS_OBJS): $(AS_FILES)
 	mkdir -p $(dir $@) && \
@@ -30,11 +32,11 @@ $(LIBC_OBJS): $(LIBC_FILES)
 
 .PHONY: build-libc
 build-libc: $(LIBC_OBJS)
-	$(CC) -shared $(LIBC_OBJS) -o bin/crt0.so
+	$(CC) -shared $(LIBC_OBJS) -o bin/libc.so
 
 .PHONY: build
 build: $(C_OBJS) $(AS_OBJS)
-	$(LNK) -n $(CC_FILES) -T linker.ld $(KLIBS) $(C_OBJS) $(AS_OBJS) -o bin/kernel.bin && \
+	$(LNK) -n $(KLNK_FLAGS) $(CC_FILES) $(C_OBJS) $(AS_OBJS) -o bin/kernel.bin && \
 	cp bin/kernel.bin iso/boot/kernel.bin && \
 	grub-mkrescue iso -o lzlos.iso
 
