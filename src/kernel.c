@@ -2,7 +2,7 @@
 #include "vga.h"
 #include "kdefs.h"
 #include "kpic.h"
-#include "kps2.h"
+#include "kbd.h"
 #include "multiboot.h"
 #include "mmap.h"
 
@@ -47,19 +47,6 @@ static const char* exception_names[] = {
 	// Kernel-defined exceptions
 };
 
-int irq_cpl(kisrcall_t *info) {
-	return info->cs & 0b11;
-}
-
-// Handle panic interrupts
-static void panic_irq(kisrcall_t *info) {
-	// Only kernel panics
-	if (irq_cpl(info) == 0) {
-		vga_printf("Panic: %s\n", info->rdi);
-		asm("hlt");	
-	}
-}
-
 // Handle all ISRs from the IDT
 void kernel_isrhandler(kisrcall_t *info) {
 	if (info->isr_number < sizeof(exception_names)/sizeof(exception_names[0])) {
@@ -68,13 +55,10 @@ void kernel_isrhandler(kisrcall_t *info) {
 	}
 	
 	if (info->isr_number == IRQ_KEYBOARD) {
-		kps2_irq(info);
+		kbd_irq(info);
 	}
 
 	io_eoi(info->isr_number-IRQ_TIMER);
-}
-
-void kernel_setup_paging() {
 }
 
 void kernel_main(int mbi) {

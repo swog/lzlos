@@ -1,7 +1,6 @@
 bits 64
 
 extern kernel_main
-extern kernel_setup_paging
 extern page_table_l4
 
 section .text
@@ -52,18 +51,6 @@ set_cr8:
 	mov cr8, rdi
 	ret
 
-; Return EAX lower 2 bits of CPL
-global get_cpl
-get_cpl:
-	mov ax, cs
-	and eax, 0b11
-	ret
-
-global panic
-panic:
-	int 0x20+16
-	ret
-
 extern tss
 extern idt_init
 extern gdt64
@@ -91,9 +78,6 @@ long_mode_start:
 	;ltr ax
 
 	call idt_init
-
-	mov rdi, page_table_l4
-	call kernel_setup_paging
 	
 	; Pop multiboot2 struct
 	pop rbx

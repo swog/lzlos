@@ -1,22 +1,29 @@
-as_files := $(shell find src -name *.asm)
-as_objfiles := $(patsubst src/%.asm, bin/%.o, $(as_files))
-c_files := $(shell find src -name *.c)
-c_objfiles := $(patsubst src/%.c, bin/%.o, $(c_files))
-objfiles := $(as_objfiles) $(c_objfiles)
+AS := nasm
+AS_FLAGS := -f elf64
 
-$(as_objfiles): bin/%.o : src/%.asm
-	mkdir -p $(dir $@) && \
-	nasm -f elf64 $(patsubst bin/%.o, src/%.asm, $@) -o $@
+CC := gcc
+CC_FLAGS := -Wall -fno-stack-protector
 
-$(c_objfiles): bin/%.o : src/%.c
+LNK := ld
+
+AS_FILES := $(shell find src/boot -maxdepth 1 -name *.asm)
+AS_OBJS := $(patsubst src/%.asm, bin/%.o, $(AS_FILES))
+C_FILES := $(shell find src -maxdepth 1 -name *.c)
+C_OBJS := $(patsubst src/%.c, bin/%.o, $(C_FILES))
+
+$(AS_OBJS): $(AS_FILES)
 	mkdir -p $(dir $@) && \
-	./x86_64-linux/bin/gcc -c -Wall -std=gnu99 -fno-stack-protector $(patsubst bin/%.o, src/%.c, $@) -o $@
+	$(AS) $(AS_FLAGS) $(patsubst bin/%.o, src/%.asm, $@) -o $@
+
+$(C_OBJS): $(C_FILES)
+	mkdir -p $(dir $@) && \
+	$(CC) -c $(CC_FLAGS) $(patsubst bin/%.o, src/%.c, $@) -o $@
 
 .PHONY: build
-build: $(objfiles)
-	./x86_64-linux/bin/gcc -n -o bin/kernel.bin -T linker.ld $(objfiles) && \
+build: $(C_OBJS) $(AS_OBJS)
+	$(LNK) -n $(CC_FILES) -T linker.ld $(C_OBJS) $(AS_OBJS) -o bin/kernel.bin && \
 	cp bin/kernel.bin iso/boot/kernel.bin && \
-	grub-mkrescue -o lzlos.iso iso
+	grub-mkrescue iso -o lzlos.iso
 
 .PHONY: clean
 clean:
