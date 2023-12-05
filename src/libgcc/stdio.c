@@ -13,7 +13,8 @@ int putchar(int ch) {
 }
 
 int puts(const char* str) {
-	
+	sys_write(STDOUT_FILENO, str, strlen(str));
+	putchar('\n');
 
 	return 0;
 }
