@@ -10,6 +10,9 @@
 #include "kdefs.h"
 #include "vga.h"
 
+// NULL
+#include <stddef.h>
+
 #define HEAP_BLOCK_SIZE 0x1000
 #define HEAP_BASE_VA 	0x200000
 #define HEAP_BASE_SIZE	0x200000

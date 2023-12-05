@@ -1,14 +1,7 @@
 #ifndef _KDEFS_H
 #define _KDEFS_H
 
-typedef char i8;
-typedef unsigned char u8;
-typedef short i16;
-typedef unsigned short u16;
-typedef long i32;
-typedef unsigned long u32;
-typedef long long i64;
-typedef unsigned long long u64;
+#include <stdint.h>
 
 #define EXPORT __attribute__((visibility("default")))
 #define PACKED __attribute__((packed))
@@ -16,28 +9,28 @@ typedef unsigned long long u64;
 
 // Interrupt service routine's stack
 typedef struct kisrcall_s {
-	u64 r15;
-	u64 r14;
-	u64 r13;
-	u64 r12;
-	u64 r11;
-	u64 r10;
-	u64 r9;
-	u64 r8;
-	u64 rsi;
-	u64 rdi;
-	u64 rbp;
-	u64 rdx;
-	u64 rcx;
-	u64 rbx;
-	u64 rax;
-	u64 isr_number;
-	u64 err_code;
-	u64 rip;
-	u64 cs; 
-	u64 rflags; 
-	u64 rsp;
-	u64 ss;
+	uint64_t r15;
+	uint64_t r14;
+	uint64_t r13;
+	uint64_t r12;
+	uint64_t r11;
+	uint64_t r10;
+	uint64_t r9;
+	uint64_t r8;
+	uint64_t rsi;
+	uint64_t rdi;
+	uint64_t rbp;
+	uint64_t rdx;
+	uint64_t rcx;
+	uint64_t rbx;
+	uint64_t rax;
+	uint64_t isr_number;
+	uint64_t err_code;
+	uint64_t rip;
+	uint64_t cs; 
+	uint64_t rflags; 
+	uint64_t rsp;
+	uint64_t ss;
 } kisrcall_t;
 
 typedef void kisr_handler(kisrcall_t *info);
@@ -48,18 +41,16 @@ void set_cr8(void *cr8);
 // Enable maskable interrupts
 void set_interrupts();
 
-// Get current process level
-int get_cpl();
+#ifndef STDIN_FILENO
+#define STDIN_FILENO 0
+#endif
 
-// Hault the machine
-void panic(const char *str);
+#ifndef STDOUT_FILENO
+#define STDOUT_FILENO 1
+#endif
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (sizeof(x) / sizeof(x[0]))
-#endif
-
-#ifndef NULL
-#define NULL ((void*)0)
 #endif
 
 #endif

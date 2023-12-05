@@ -5,11 +5,11 @@
 #include "kbd.h"
 #include "multiboot.h"
 #include "mmap.h"
+#include "sys.h"
 
 #define IRQ_TIMER 0x20
 #define IRQ_KEYBOARD 0x21
-
-#define INT_PANIC IRQ_TIMER+16
+#define IRQ_SYSCALL 0x80
 
 static const char* exception_names[] = {
 	"Divide Error",
@@ -49,12 +49,16 @@ static const char* exception_names[] = {
 
 // Handle all ISRs from the IDT
 void kernel_isrhandler(kisrcall_t *info) {
-	if (info->isr_number < sizeof(exception_names)/sizeof(exception_names[0])) {
+	if (info->isr_number < ARRAYSIZE(exception_names)) {
 		asm("hlt");
 	}
 	
 	if (info->isr_number == IRQ_KEYBOARD) {
 		kbd_irq(info);
+	}
+
+	if (info->isr_number == IRQ_SYSCALL) {
+		ksys_irq(info);
 	}
 
 	io_eoi(info->isr_number-IRQ_TIMER);

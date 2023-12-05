@@ -2,9 +2,9 @@ AS := nasm
 AS_FLAGS := -f elf64
 
 CC := gcc
-CC_FLAGS := -nolibc -Wall -fno-stack-protector
+CC_FLAGS := -ffreestanding -Wall -fno-stack-protector
 
-LNK := ld
+LD := ld
 
 AR := ar
 
@@ -13,10 +13,12 @@ AS_OBJS := $(patsubst src/%.asm, bin/%.o, $(AS_FILES))
 C_FILES := $(shell find src -maxdepth 1 -name *.c)
 C_OBJS := $(patsubst src/%.c, bin/%.o, $(C_FILES))
 
-LIBC_FILES := $(shell find src/libc -name *.c)
+LIBC_FILES := $(shell find src/libgcc -name *.c)
 LIBC_OBJS := $(patsubst src/%.c, bin/%.o, $(LIBC_FILES))
 
-KLNK_FLAGS := -T linker.ld -nostdlib -znodefaultlib -Lbin -lc
+#LIBC must be added at the end of any list of objects
+LIBC := -L./bin -lgcc
+LD_FLAGS := -T linker.ld 
 
 $(AS_OBJS): $(AS_FILES)
 	mkdir -p $(dir $@) && \
@@ -28,20 +30,26 @@ $(C_OBJS): $(C_FILES)
 
 $(LIBC_OBJS): $(LIBC_FILES)
 	mkdir -p $(dir $@) && \
-	$(CC) -c -fPIC -I src $(CC_FILES) $(patsubst bin/%.o, src/%.c, $@) -o $@
+	$(CC) -c $(CC_FLAGS) -I./src $(CC_FLAGS) $(patsubst bin/%.o, src/%.c, $@) -o $@
 
-.PHONY: build-libc
-build-libc: $(LIBC_OBJS)
-	$(CC) -shared $(LIBC_OBJS) -o bin/libc.so
+# Might need to add more LIBC assembly files
+bin/libgcc/sys.o: src/libgcc/sys.asm
+	mkdir -p $(dir $@) && \
+	$(AS) $(AS_FLAGS) $< -o $@
+
+.PHONY: build-libgcc
+build-libgcc: $(LIBC_OBJS) bin/libgcc/sys.o
+	
+	$(AR) -rcs bin/libgcc.a $(LIBC_OBJS) bin/libgcc/sys.o
 
 .PHONY: build
 build: $(C_OBJS) $(AS_OBJS)
-	$(LNK) -n $(KLNK_FLAGS) $(CC_FILES) $(C_OBJS) $(AS_OBJS) -o bin/kernel.bin && \
+	$(LD) -n $(LD_FLAGS) $(C_OBJS) $(AS_OBJS) $(LIBC) -o bin/kernel.bin && \
 	cp bin/kernel.bin iso/boot/kernel.bin && \
 	grub-mkrescue iso -o lzlos.iso
 
 .PHONY: all
-all: clean build-libc build
+all: clean build-libgcc build
 
 .PHONY: clean
 clean:

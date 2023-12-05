@@ -1,23 +1,23 @@
 #include <stdio.h>
 #include "vga.h"
 #include "kdefs.h"
+#include "sys.h"
 
-EXPORT int putchar(int ch) {
-	// Send to vga for now.
-	vga_putc(ch);
+FILE* stdout = (FILE*)STDOUT_FILENO;
+FILE* stdin = (FILE*)STDIN_FILENO;
+
+int putchar(int ch) {
+	sys_write(STDOUT_FILENO, &ch, 1);
 
 	return ch;
 }
 
-EXPORT int puts(const char* str) {
-	vga_puts(str);
-	vga_putc('\n');
+int puts(const char* str) {
+	
 
 	return 0;
 }
 
-EXPORT int printf(const char* format, ...) {
-	
-
+int printf(const char* format, ...) {
 	return 0;
 }
