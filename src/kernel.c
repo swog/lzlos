@@ -6,6 +6,7 @@
 #include "multiboot.h"
 #include "mmap.h"
 #include "sys.h"
+#include "vga.h"
 
 #define IRQ_TIMER 0x20
 #define IRQ_KEYBOARD 0x21
@@ -58,6 +59,7 @@ void kernel_isrhandler(kisrcall_t *info) {
 	}
 
 	if (info->isr_number == IRQ_SYSCALL) {
+		vga_puts("SYSCALL\n");
 		ksys_irq(info);
 	}
 
