@@ -70,8 +70,10 @@ idt_init:
 	mov word [rbx+6], ax
 	shr rax, 16
 	mov qword [rbx+8], rax
-	
+
+	; 
 	add rbx, 16
+	; Interrupt service routines are 16 byte aligned
 	add rcx, 16
 	
 	cmp rbx, idt.end
@@ -86,7 +88,7 @@ isr_handler:
 	mov rdi, rsp                ; Move the stack pointer to the first argument
 	call kernel_isrhandler      ; Move to C kernel
 	popall
-	add rsp, 16                 ; Remove the 2 numbers we pushed
+	add rsp, 16               	; Remove the numbers we pushed	
 	iretq                       ; Interrupt return
 
 %macro isr 1
@@ -95,7 +97,6 @@ isr%1:
 	push 0                      ; Push 0 error
 	push %1                     ; Push ISR index
 	jmp isr_handler
-	int3
 %endmacro
 
 %macro error_isr 1
@@ -103,7 +104,6 @@ align 16, db 0xcc
 error_isr%1:
 	push %1
 	jmp isr_handler
-	int3
 %endmacro
 
 isr 0

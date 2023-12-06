@@ -63,24 +63,8 @@ long_mode_start:
 	mov gs, ax
 	mov ds, ax
 
-	; Push physical multiboot2 struct to stack again
-	push rbx
-
-	; Load task state register (broken)
-	mov rax, gdt64+0x18
-	mov rbx, tss
-	mov word [rax+2], bx
-	shr rbx, 16
-	mov byte [rax+4], bl
-	mov byte [rax+7], bh
-
-	mov ax, 0x18
-	;ltr ax
-
 	call idt_init
 	
-	; Pop multiboot2 struct
-	pop rbx
 	; Set first argument to multiboot2 struct physical
 	mov rdi, rbx
 

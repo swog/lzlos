@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "vga.h"
 #include "kdefs.h"
 #include "sys.h"
@@ -13,8 +14,10 @@ int putchar(int ch) {
 }
 
 int puts(const char* str) {
+	static const char newline = '\n';
+
 	sys_write(STDOUT_FILENO, str, strlen(str));
-	putchar('\n');
+	sys_write(STDOUT_FILENO, &newline, 1);
 
 	return 0;
 }

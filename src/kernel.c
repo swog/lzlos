@@ -51,6 +51,9 @@ static const char* exception_names[] = {
 // Handle all ISRs from the IDT
 void kernel_isrhandler(kisrcall_t *info) {
 	if (info->isr_number < ARRAYSIZE(exception_names)) {
+		vga_puts("Fatal exception: ");
+		vga_puts(exception_names[info->isr_number]);
+		vga_putc('\n');
 		asm("hlt");
 	}
 	
