@@ -63,10 +63,8 @@ long_mode_start:
 	mov gs, ax
 	mov ds, ax
 
+	; Setup interrupt descriptor table
 	call idt_init
-	
-	; Set first argument to multiboot2 struct physical
-	mov rdi, rbx
 
 	call kernel_main
 

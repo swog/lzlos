@@ -155,7 +155,7 @@ gdt64:
 	db 0
 	; 0x18
 .tss_segment: equ $ - gdt64
-	dw 108
+	dw tss.end - tss
 	dw 0
 	db 0
 	db 0x9 | (1<<7) ; Available TSS type, present

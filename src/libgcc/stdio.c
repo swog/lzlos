@@ -23,5 +23,6 @@ int puts(const char* str) {
 }
 
 int printf(const char* format, ...) {
+	sys_write(STDOUT_FILENO, format, strlen(format));
 	return 0;
 }

@@ -51,18 +51,15 @@ static const char* exception_names[] = {
 // Handle all ISRs from the IDT
 void kernel_isrhandler(kisrcall_t *info) {
 	if (info->isr_number < ARRAYSIZE(exception_names)) {
-		vga_puts("Fatal exception: ");
-		vga_puts(exception_names[info->isr_number]);
-		vga_putc('\n');
+		printf("Fatal exception: %s\n", exception_names[info->isr_number]);
 		asm("hlt");
-	}
+	}	
 	
 	if (info->isr_number == IRQ_KEYBOARD) {
 		kbd_irq(info);
 	}
 
-	if (info->isr_number == IRQ_SYSCALL) {
-		vga_puts("SYSCALL\n");
+	if (info->isr_number == IRQ_SYSCALL+1) {
 		ksys_irq(info);
 	}
 

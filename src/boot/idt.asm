@@ -94,7 +94,7 @@ isr_handler:
 %macro isr 1
 align 16, db 0xcc               ; Align 16 so it can be indexed
 isr%1:
-	push 0                      ; Push 0 error
+	push 0   	                ; Push 0 error
 	push %1                     ; Push ISR index
 	jmp isr_handler
 %endmacro

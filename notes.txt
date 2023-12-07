@@ -1,8 +1,20 @@
-	Malloc called in a usermode function can return the physical address of the block descriptor. The block
-descriptor would hold the physical address of the actual heap. The kernel would change the page table
-for the user application to translate the virtual address of the block descriptor to the physical
-address of the heap.
+	Malloc called in a usermode function can return the physical address of the 
+block descriptor. The block descriptor would hold the physical address of the 
+actual heap. The kernel would change the page table for the user application 
+to translate the virtual address of the block descriptor to the physical address 
+of the heap.
 
-	When freeing the heap, the kernel will know exactly where the descriptor is. It would be able to
-dereference the heap descriptor using the kernel's identity page table. It could then locate the 
-exact physical address and size to free.
+	When freeing the heap, the kernel will know exactly where the descriptor is.
+ It would be able to dereference the heap descriptor using the kernel's identity 
+page table. It could then locate the exact physical address and size to free.
+
+	The `sys` library connects libc to the kernel. Sys will eventually take care
+of file system operations (once implemented). In my libgcc implementation, sys_*
+functions are coded into sys.asm. These functions simply use syscalls to move
+control to the kernel. The kernel isr handler (kernel.c) has ksys_* counterparts,
+these counterparts may be called independently from within the kernel. These functions
+will be located in the first 2MB page. When libgcc is loaded into an executable, 
+it will independently define these syscall functions. For any executable, kernel
+memory cannot reside in the process' page table. Since the page table can reside
+outside of it's mapped memory, a system call can then change the page table how
+it wishes.
