@@ -26,6 +26,8 @@ size_t ksys_close(size_t fd);
 typedef struct kisrcall_s kisrcall_t;
 
 // Handle syscall IRQs
-void ksys_irq(kisrcall_t* info);
+int ksys_irq(kisrcall_t* info);
+
+void ksys_main();
 
 #endif

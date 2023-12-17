@@ -7,6 +7,7 @@
 //#include "cbuf.h"
 #include "kpic.h"
 #include "kbd.h"
+#include "interrupts.h"
 
 static char uppercase[] = {
 	'\0', '\e', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
@@ -26,7 +27,12 @@ static char lowercase[] = {
 
 int kps2_uppercase = 0;
 
-void kbd_irq(kisrcall_t *info) {
+// Add the interrupt handler
+void kbd_main() {
+	kernel_interrupts_set(IRQ_KEYBOARD, kbd_irq);
+}
+
+int kbd_irq(kisrcall_t *info) {
 	int key = io_inb(0x60);
 
 	switch (key) {

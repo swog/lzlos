@@ -10,7 +10,7 @@ sys_read:
 global sys_write:
 sys_write:
 	mov rax, 1
-	int 0x81
+	int 0x80
 	ret
 
 global sys_open:

@@ -2,6 +2,7 @@
 #include "kdefs.h"
 #include "sys.h"
 #include "vga.h"
+#include "interrupts.h"
 
 // Make sure these don't get linked with libgcc
 size_t ksys_read(size_t fd, void* buf, size_t num) {
@@ -31,28 +32,31 @@ size_t ksys_close(size_t fd) {
 	return 0;
 }
 
+void ksys_main() {
+	kernel_interrupts_set(IRQ_SYSCALL, ksys_irq);
+}
+
 // Handle syscall IRQs
-void ksys_irq(kisrcall_t* info) {
+int ksys_irq(kisrcall_t* info) {
 	switch (info->rax) {
 		case SYS_READ: {
 			info->rax = ksys_read(info->rdi, (char*)info->rsi, info->rdx);
-			return;
+			return 0;
 		}
 		case SYS_WRITE: {
 			info->rax = ksys_write(info->rdi, (const char*)info->rsi, info->rdx);
-			return;
+			return 0;
 		} 
 		case SYS_OPEN: {
 			info->rax = ksys_open((const char*)info->rdi, info->rsi, info->rdx);
-			return;
+			return 0;
 		}
 		case SYS_CLOSE: {
 			info->rax = ksys_close(info->rdi);
-			return;
+			return 0;
 		}
 	}
 
-	printf("Panic! Unhandled syscall\n");
-
 	// Panic
+	return 1;
 }

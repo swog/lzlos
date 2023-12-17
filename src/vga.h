@@ -22,6 +22,5 @@ typedef enum {
 void vga_color(unsigned char fg, unsigned char bg);
 void vga_clear();
 void vga_putc(char ch);
-void vga_puts_s(const char* str, int len);
 void vga_puts(const char* str);
 void vga_printf(const char* fmt, ...);

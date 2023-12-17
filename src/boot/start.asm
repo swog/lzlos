@@ -10,7 +10,7 @@ start:
 	
 	; Save the physical address of the multiboot2 structure
 	push ebx
-	
+
 	call clear
 
 	call check_multiboot

@@ -33,8 +33,6 @@ typedef struct kisrcall_s {
 	uint64_t ss;
 } kisrcall_t;
 
-typedef void kisr_handler(kisrcall_t *info);
-
 void set_cr3(void *pagetable);
 void set_cr8(void *cr8);
 

@@ -1,5 +1,6 @@
 
 #include <stdarg.h>
+#include <string.h>
 #include "vga.h"
 #include "kdefs.h"
 
@@ -82,5 +83,98 @@ void vga_puts(const char* str) {
 		str++;
 	}
 }
+
+#define NIBBLE_HI(x) (((x) & 0xf0) >> 4)
+#define NIBBLE_LO(x) ((x) & 0x0f)
+
+// Return- Size of required string
+static size_t vga_ztos(size_t num, char* dst, size_t size) {
+	// Get required size
+	size_t req = 0;
+	const char* buf = (const char*)&num;
+	
+	// Most significant bit
+	int msb_reached = 0;
+
+	static const char conv[] = "0123456789abcdef";
+
+	for (size_t i = 0; i < sizeof(size_t); i++) {
+		// Null byte before MSB, don't display.
+		if (!buf[i] && !msb_reached) {
+			continue;
+		}
+		else if (buf[i]) {
+			msb_reached = 1;
+		}
+
+		if (dst && size > req+1) {
+			dst[req] = conv[NIBBLE_HI(buf[i])];
+			dst[++req] = conv[NIBBLE_LO(buf[i])];
+		}
+
+		req++;
+	}
+
+	if (dist && size > req) {
+		dst[req] = '\0';
+	}
+
+	return ++req;
+}
+
+// Mod- Modifier character
+// 1- Failure
+// 0- Success
+static int vga_format(char mod, char format, va_list ap) {
+	switch (format) {
+		case 's': {
+			vga_puts(va_arg(ap, const char*));
+		} break;
+		case 'x': {
+			const size_t num = va_arg(ap, size_t);
+		} break;
+		case '%': {
+			vga_putc('%');
+		} break;
+		default:
+			return 1;
+	}
+	return 0;
+}
+
+void vga_printf(const char* format, ...) {
+	size_t len = strlen(format);
+
+	va_list ap;
+	va_start(ap, format);
+
+	for (size_t i = 0; i < len; i++) {
+		if (i + 1 < len && format[i] == '%') {
+			switch (format[i+1]) {
+				case 's': {
+					vga_puts(va_arg(ap, const char*));
+				} break;
+				case 'x': {
+					
+				} break;
+				case '%': {
+					vga_putc('%');
+				} break;
+			}
+			i++;
+		}
+		else {
+			vga_putc(format[i]);
+		}
+	}
+
+	va_end(ap);
+}
+
+
+
+
+
+
 
 

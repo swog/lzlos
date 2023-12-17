@@ -1,5 +1,65 @@
 #include <string.h>
 
+// String concatenate simple
+char* strncat(char* dst, const char* src, size_t num) {
+	char* ptr = dst;
+
+	while (*ptr) {
+		ptr++;
+	}
+
+	for (size_t i = 0; i < num; i++) {
+		*ptr = src[i];
+		ptr++;
+	}
+
+	*ptr = '\0';	
+
+	return dst;
+}
+
+char* strcat(char* dst, const char* src) {
+	char* ptr = dst;
+
+	while (*ptr) {
+		ptr++;
+	}
+
+	do {
+		*ptr++ = *src++;
+	} while (*src);
+
+	return dst;
+}
+
+char* strchr(const char* str, int c) {
+	char* ptr = (char*)str;
+	
+	while (*ptr) {
+		if (*ptr == c) {
+			return ptr;
+		}
+	}
+	
+	return NULL;
+}
+
+int isxdigit(int ch) {
+	return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
+}
+
+int isspace(int ch) {
+	return !(ch > ' ' && ch <= '~');
+}
+
+int islower(int ch) {
+	return ch >= 'a';
+}
+
+int isupper(int ch) {
+	return ch < 'a';
+}
+
 size_t strlen(const char* str) {
 	size_t i;
 	for (i = 0; str[i]; i++);
@@ -52,26 +112,25 @@ int memcmp(const void* ptr1, const void* ptr2, size_t num) {
 }
 
 char *strcpy(char *dst, const char *src) {
-	char *dstp = dst;
+	char *ptr = dst;
 
-	while (*src) {
-		*dstp = *src;
-		dstp++;
-		src++;
+	if (*src) {
+		do {
+			*ptr++ = *src++;
+		} while (*src);
 	}
-
-	*dstp = 0;
 
 	return dst;
 }
 
 char *strncpy(char *dst, const char *src, size_t num) {
-	for (size_t i = 0; i < num; i++) {
-		dst[i] = *src;
-		
-		if (*src) {
-			src++;
-		}
+	char* ptr = dst;
+
+	if (*src && num) {
+		do {
+			*ptr++ = *src++;
+			num--;
+		} while (*src && num);
 	}
 
 	return dst;

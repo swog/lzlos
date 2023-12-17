@@ -36,6 +36,8 @@ io_inb:
 
 	ret
 
+; This enables the interrupt flag
+; The interrupt flag enables maskable interrupts
 global set_interrupts
 set_interrupts:
 	sti

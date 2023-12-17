@@ -10,6 +10,7 @@
 
 struct kisrcall_s;
 
-void kbd_irq(struct kisrcall_s *info);
+int kbd_irq(struct kisrcall_s *info);
+void kbd_main();
 
 #endif
