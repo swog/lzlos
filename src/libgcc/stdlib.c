@@ -1,82 +1,60 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "mmap.h"
 
-char* ulltostr(unsigned long long num, char* buf, size_t size, size_t base) {
-	if (size >= 1) {
-		buf[0] = '\0';
-	}
+void* malloc(size_t size) {
+	return kalloc(size);
+}
 
+void free(void* base) {
+	return kfree(base);
+}
+
+// Return required-or-used size
+// `dst` can be null.
+// `size` can be null.
+//
+// 	This function has the perfect design scheme, since the
+// required size of an ULL is unknown. Calling this function
+// twice is memory-economical, and speed-efficient enough for
+// this function.
+size_t ulltostr(unsigned long long num, int base, char* dst, size_t size) {
 	const char* table = "0123456789abcdef";
+	unsigned long long digit;	
+	size_t i = 1;
 
-	
-
-	return buf;
-}
-
-// Valid input is assumed, besides base.
-unsigned long long strtoull(const char* str, char** endptr, int base) {
-	// TODO: Unsupported bases
-	if (base > 16 || base < 2) {
-		return 0;
+	if (dst) {
+		dst[size-1] = 0;
 	}
 
-	unsigned long long num = 0;
-	const char* lowers = "0123456789abcdef";
-	const char* uppers = "0123456789ABCDEF";
-	const char* loc;
-
-	*endptr = (char*)str;	
-
-	// Skip non-numeric
-	while (**endptr == '0') {
-		str++;
-		(*endptr)++;
-	}
-
-	// Skip non-numeric
-	if (**endptr == 'x' || **endptr == 'b') {
-		str++;
-		(*endptr)++;
-	}
-	
-	// Iterate until end of string, or non-hex digit.
-	while (**endptr && isxdigit(**endptr)) {
-		(*endptr)++;
-	}
-
-	(*endptr)--;
-
-	size_t pwr = 1;
-
-	while (*endptr >= str) {
-		if (isupper(**endptr)) {
-			loc = strchr(uppers, **endptr);
-		
-			// ERROR: Not in character table.	
-			if (!loc) {
-				return num;
-			}
-
-			num += pwr*(loc-uppers);
+	if (!num) {
+		if (dst && i < size) {
+			dst[size-i-1] = '0';
 		}
-		else {
-			loc = strchr(lowers, **endptr);
-			
-			// ERROR: Not in character table.
-			if (!loc) {
-				return num;
-			}
+		i++;
+	}
+	else {
+		// Place base remainder back to front. Then divide by base.
+		for (; num != 0; i++) {
+			digit = num % base;
+			num /= base;
 
-			num += pwr*(loc-lowers);
+			if (dst && i < size) {
+				dst[size-i-1] = table[digit];
+			}
 		}
-		pwr *= base;
-		(*endptr)--;
 	}
 
-	return num;
-}
+	// Pad with zeros to the beginning of the string.
+	if (dst) {
+		for (; i < size; i++) {
+			dst[size-i-1] = '0';
+		}
+	}
 
+	return i;
+}
 
 int system(const char* command) {
 	return 0;

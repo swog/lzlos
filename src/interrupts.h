@@ -15,12 +15,12 @@ typedef struct kisrcall_s kisrcall_t;
 #define IRQ_SYSCALL 0x80
 #endif
 
-#ifndef KINTERRUPT_FAILURE
-#define KINTERRUPT_FAILURE 0
+#ifndef IRQ_FAILURE
+#define IRQ_FAILURE 0
 #endif
 
-#ifndef KINTERRUPT_SUCCESS
-#define KINTERRUPT_SUCCESS 1
+#ifndef IRQ_SUCCESS
+#define IRQ_SUCCESS 1
 #endif
 
 // Return 0 on failure to return execution; halt.

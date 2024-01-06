@@ -41,22 +41,22 @@ int ksys_irq(kisrcall_t* info) {
 	switch (info->rax) {
 		case SYS_READ: {
 			info->rax = ksys_read(info->rdi, (char*)info->rsi, info->rdx);
-			return 0;
+			return IRQ_SUCCESS;
 		}
 		case SYS_WRITE: {
 			info->rax = ksys_write(info->rdi, (const char*)info->rsi, info->rdx);
-			return 0;
+			return IRQ_SUCCESS;
 		} 
 		case SYS_OPEN: {
 			info->rax = ksys_open((const char*)info->rdi, info->rsi, info->rdx);
-			return 0;
+			return IRQ_SUCCESS;
 		}
 		case SYS_CLOSE: {
 			info->rax = ksys_close(info->rdi);
-			return 0;
+			return IRQ_SUCCESS;
 		}
 	}
 
 	// Panic
-	return 1;
+	return IRQ_FAILURE;
 }

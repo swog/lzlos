@@ -29,6 +29,7 @@ void kernel_main(int mbi) {
 	set_interrupts();	
 
 	puts("hello crt0!");
+	//vga_putc('a');
 }
 
 

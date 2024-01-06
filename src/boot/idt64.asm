@@ -40,7 +40,7 @@ global idt_init
 	pop rax
 %endmacro
 
-    ; Must be data section. We initialize it programatically, unfortunately.
+; Must be data section. We initialize it programatically, unfortunately.
 section .data
 idt:
 	times 256 dq 0
@@ -51,6 +51,11 @@ idtr:
 	dw idt.end - idt - 1
 	dq idt
 
+IDT64_SEGMENT equ (0x8)
+IDT64_PRESENT equ (1<<15)
+IDT64_DPL_KERNEL equ (0<<13)
+IDT64_INTERRUPT_GATE equ (0b1110<<8)
+
 section .text
 	; ===========================================
 	; RBX-IDT destination
@@ -58,20 +63,36 @@ section .text
 	; CX-Increment
 
 idt_init:
-	mov rbx, idt
-	mov rcx, isr0
+	lea rbx, idt
+	lea rcx, isr0
 .loop:
 	mov rax, rcx
-	
+
+	; Offset of entry point low word.	
 	mov word [rbx], ax
-	mov word [rbx+2], 0x8
-	mov word [rbx+4], 0x8e00
+	; Code segment selector, word
+	mov word [rbx+2], IDT64_SEGMENT
+
+	; Flags word
+	; The lower 2 bits are the interrupt stack table selector.
+	; If they are set to zero, it is unused.
+	; This will have to be used later for security purposes.
+	mov word [rbx+4], IDT64_PRESENT|IDT64_DPL_KERNEL|IDT64_INTERRUPT_GATE
+
+	; Shift 16 bits
 	shr rax, 16
+
+	; Place right-most word
 	mov word [rbx+6], ax
+
+	; Shift again
 	shr rax, 16
+
+	; Place highest offset dword.
+	; There is also a reserved dword.
 	mov qword [rbx+8], rax
 
-	; 
+	; Idt entries are 16 bytes.
 	add rbx, 16
 	; Interrupt service routines are 16 byte aligned
 	add rcx, 16
@@ -90,6 +111,7 @@ isr_handler:
 	popall
 	add rsp, 16               	; Remove the numbers we pushed	
 	iretq                       ; Interrupt return
+	hlt
 
 %macro isr 1
 align 16, db 0xcc               ; Align 16 so it can be indexed
@@ -105,6 +127,8 @@ error_isr%1:
 	push %1
 	jmp isr_handler
 %endmacro
+
+global isr_handler
 
 isr 0
 isr 1  

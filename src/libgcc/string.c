@@ -1,4 +1,62 @@
 #include <string.h>
+#include <stdarg.h>
+
+int format_istype(char ch) {
+	switch (ch) {
+		case 'z':
+		case 'l':
+		case 'u':
+		case 'i':
+		case 'd':
+		case 'f':
+		case 's':
+		case 'x':
+		case 'p':
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+size_t format_type(const char* format, size_t i, size_t len) {
+	size_t flags_type = 0;
+
+	if (!format_istype(format[i])) {
+		return 0;
+	}
+	
+	flags_type |= format[i++];
+
+	for (; i < len && format_istype(format[i]); i++) {
+		flags_type <<= 8;
+		flags_type |= format[i];
+	}
+
+	return flags_type;
+}
+
+int vsprintf(char* dst, const char* format, va_list ap) {
+	size_t size = 0;
+	size_t len = strlen(format);
+	size_t type;
+
+	for (size_t i = 0; i < len; i++) {
+		if (format[i] == '%' && i+1 < len) {
+			if (format[i+1] == '%') {
+				size++;
+				continue;
+			}
+
+			type = format_type(format, i+1, len);
+
+			if (!type) {
+				return -1;
+			}
+
+			
+		}
+	}
+}
 
 // String concatenate simple
 char* strncat(char* dst, const char* src, size_t num) {

@@ -2,6 +2,7 @@
 #define _KDEFS_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define EXPORT __attribute__((visibility("default")))
 #define PACKED __attribute__((packed))
@@ -38,6 +39,9 @@ void set_cr8(void *cr8);
 
 // Enable maskable interrupts
 void set_interrupts();
+
+// LIBC unsigned long to string.
+size_t ulltostr(unsigned long long num, int base, char* dst, size_t size); 
 
 #ifndef STDIN_FILENO
 #define STDIN_FILENO 0

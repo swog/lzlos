@@ -2,6 +2,7 @@
 #include "vga.h"
 #include "kdefs.h"
 #include "kpic.h"
+#include "libgcc/sys.h"
 #include <string.h>
 
 static const char* exception_names[] = {
@@ -42,32 +43,30 @@ static const char* exception_names[] = {
 
 kinterrupt_t kernel_interrupts_table[256];
 
-// Initialize the interrupts table
-void kernel_interrupts_main() {
-	memset(kernel_interrupts_table, 0, sizeof(kernel_interrupts_table));
-}
-
-// Get the name of a CPU interrupt
-const char* kernel_interrupts_name(unsigned char num) {
-	if (num < ARRAYSIZE(exception_names)) {
-		return exception_names[num];
-	}
-	return NULL;
-}
-
-kinterrupt_t kernel_interrupts_get(unsigned char num) {
-	return kernel_interrupts_table[num];
-}
+extern void* isr_handler;
 
 static void print_info(kisrcall_t* info) {
 	const char* name = kernel_interrupts_name(info->isr_number);
 
 	if (name) {
 		vga_printf("CPU interrupt: %s\n", name);
-	}
+	}	
 
 	vga_printf("Interrupt vector: %x\n", info->isr_number);
 	vga_printf("Error code: %x\n", info->err_code);
+	
+	if (info->err_code & 1) {
+		vga_printf("-External event error.\n");
+	}
+
+	if (info->err_code & 2) {
+		vga_printf("-IDT descriptor error.\n");
+	}
+
+	if (info->err_code & 4) {
+		vga_printf("-GDT/LDT descriptor error.\n");
+	}	
+
 	vga_printf("Ss: %x\n", info->ss);
 	vga_printf("Rsp: %x\n", info->rsp);
 	vga_printf("Rflags: %x\n", info->rflags);
@@ -90,9 +89,29 @@ static void print_info(kisrcall_t* info) {
 	vga_printf("R15: %x\n", info->r15);
 }
 
-// Internal kernel interrupt invocation
-static int kernel_interrupts_call(kisrcall_t* info) {
-	return kernel_interrupts_get(info->isr_number)(info);
+// General Protection Fault
+// Typically an invalid instruction
+static int kernel_interrupts_gpf(kisrcall_t* info) {
+	
+	return IRQ_FAILURE;
+}
+
+// Initialize the interrupts table
+void kernel_interrupts_main() {
+	memset(kernel_interrupts_table, 0, sizeof(kernel_interrupts_table));
+	kernel_interrupts_table[0xd] = kernel_interrupts_gpf;
+}
+
+// Get the name of a CPU interrupt
+const char* kernel_interrupts_name(unsigned char num) {
+	if (num < ARRAYSIZE(exception_names)) {
+		return exception_names[num];
+	}
+	return NULL;
+}
+
+kinterrupt_t kernel_interrupts_get(unsigned char num) {
+	return kernel_interrupts_table[num];
 }
 
 void kernel_interrupts_set(unsigned char num, kinterrupt_t func) {
@@ -102,9 +121,10 @@ void kernel_interrupts_set(unsigned char num, kinterrupt_t func) {
 // Handle kernel interrupt vectors
 void kernel_isrhandler(kisrcall_t* info) {
 	// Halt if there is no interrupt handler, or the handler failed to resume execution.
-	if (kernel_interrupts_get(info->isr_number)) {
-		if (kernel_interrupts_call(info) == KINTERRUPT_FAILURE) {
-			vga_printf("Failed to handle interrupt.\n");
+	kinterrupt_t func = kernel_interrupts_get(info->isr_number);
+	if (func) {
+		if (func(info) == IRQ_FAILURE) {
+			vga_printf("Fatal ISR.\n");
 			print_info(info);
 			asm("hlt");
 		}

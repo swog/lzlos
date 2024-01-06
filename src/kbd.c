@@ -4,9 +4,8 @@
 
 #include "kdefs.h"
 #include "vga.h"
-//#include "cbuf.h"
-#include "kpic.h"
 #include "kbd.h"
+#include "kpic.h"
 #include "interrupts.h"
 
 static char uppercase[] = {
@@ -64,4 +63,6 @@ int kbd_irq(kisrcall_t *info) {
 				//vga_putc('?');
 			}
 	}
+
+	return IRQ_SUCCESS;
 }
