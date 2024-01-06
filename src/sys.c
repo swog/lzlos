@@ -5,31 +5,31 @@
 #include "interrupts.h"
 
 // Make sure these don't get linked with libgcc
-size_t ksys_read(size_t fd, void* buf, size_t num) {
-	return 0;
+int ksys_read(kisrcall_t* info) {
+	return IRQ_SUCCESS;
 }
 
 // Kernel system write
-size_t ksys_write(size_t fd, const void* buf, size_t num) {
-	if (fd == STDOUT_FILENO) {
-		const char* src = (const char*)buf;
+int ksys_write(kisrcall_t* info) {
+	if (info->rdi == STDOUT_FILENO) {
+		const char* src = (const char*)info->rsi;
 		
 		for (size_t i = 0; i < num; i++) {
-			vga_putc(src[i]);
+			kputc(src[i]);
 		}
 	}
 
-	return num;
+	return IRQ_SUCCESS;
 }
 
 // System open file
-size_t ksys_open(const char* filename, size_t flags, size_t mode) {
-	return 0;
+int ksys_open(kisrcall_t* info) {
+	return IRQ_SUCCESS;
 }
 
 // System close
-size_t ksys_close(size_t fd) {
-	return 0;
+int ksys_close(kisrcall_t* info) {
+	return IRQ_SUCCESS;
 }
 
 void ksys_main() {
@@ -40,23 +40,21 @@ void ksys_main() {
 int ksys_irq(kisrcall_t* info) {
 	switch (info->rax) {
 		case SYS_READ: {
-			info->rax = ksys_read(info->rdi, (char*)info->rsi, info->rdx);
-			return IRQ_SUCCESS;
+			return ksys_read(info);
 		}
 		case SYS_WRITE: {
-			info->rax = ksys_write(info->rdi, (const char*)info->rsi, info->rdx);
-			return IRQ_SUCCESS;
+			return ksys_write(info);
 		} 
 		case SYS_OPEN: {
-			info->rax = ksys_open((const char*)info->rdi, info->rsi, info->rdx);
-			return IRQ_SUCCESS;
+			return ksys_open(info);
 		}
 		case SYS_CLOSE: {
-			info->rax = ksys_close(info->rdi);
-			return IRQ_SUCCESS;
+			return ksys_close(info);
 		}
 	}
 
 	// Panic
 	return IRQ_FAILURE;
 }
+
+

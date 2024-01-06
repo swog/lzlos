@@ -43,63 +43,40 @@ static const char* exception_names[] = {
 
 kinterrupt_t kernel_interrupts_table[256];
 
-extern void* isr_handler;
-
 static void print_info(kisrcall_t* info) {
 	const char* name = kernel_interrupts_name(info->isr_number);
 
 	if (name) {
-		vga_printf("CPU interrupt: %s\n", name);
+		kprintf("CPU interrupt: %s\n", name);
 	}	
 
-	vga_printf("Interrupt vector: %x\n", info->isr_number);
-	vga_printf("Error code: %x\n", info->err_code);
-	
-	if (info->err_code & 1) {
-		vga_printf("-External event error.\n");
-	}
-
-	if (info->err_code & 2) {
-		vga_printf("-IDT descriptor error.\n");
-	}
-
-	if (info->err_code & 4) {
-		vga_printf("-GDT/LDT descriptor error.\n");
-	}	
-
-	vga_printf("Ss: %x\n", info->ss);
-	vga_printf("Rsp: %x\n", info->rsp);
-	vga_printf("Rflags: %x\n", info->rflags);
-	vga_printf("Cs: %x\n", info->cs);
-	vga_printf("Rip: %x\n", info->rip);
-	vga_printf("Rax: %x\n", info->rax);
-	vga_printf("Rbx: %x\n", info->rbx);
-	vga_printf("Rcx: %x\n", info->rcx);
-	vga_printf("Rdx: %x\n", info->rdx);
-	vga_printf("Rbp: %x\n", info->rbp);
-	vga_printf("Rdi: %x\n", info->rdi);
-	vga_printf("Rsi: %x\n", info->rsi);
-	vga_printf("R8: %x\n", info->r8);
-	vga_printf("R9: %x\n", info->r9);
-	vga_printf("R10: %x\n", info->r10);
-	vga_printf("R11: %x\n", info->r11);
-	vga_printf("R12: %x\n", info->r12);
-	vga_printf("R13: %x\n", info->r13);
-	vga_printf("R14: %x\n", info->r14);
-	vga_printf("R15: %x\n", info->r15);
-}
-
-// General Protection Fault
-// Typically an invalid instruction
-static int kernel_interrupts_gpf(kisrcall_t* info) {
-	
-	return IRQ_FAILURE;
+	kprintf("Interrupt vector: %x\n", info->isr_number);
+	kprintf("Error code: %x\n", info->err_code);	
+	kprintf("Ss: %x\n", info->ss);
+	kprintf("Rsp: %x\n", info->rsp);
+	kprintf("Rflags: %x\n", info->rflags);
+	kprintf("Cs: %x\n", info->cs);
+	kprintf("Rip: %x\n", info->rip);
+	kprintf("Rax: %x\n", info->rax);
+	kprintf("Rbx: %x\n", info->rbx);
+	kprintf("Rcx: %x\n", info->rcx);
+	kprintf("Rdx: %x\n", info->rdx);
+	kprintf("Rbp: %x\n", info->rbp);
+	kprintf("Rdi: %x\n", info->rdi);
+	kprintf("Rsi: %x\n", info->rsi);
+	kprintf("R8: %x\n", info->r8);
+	kprintf("R9: %x\n", info->r9);
+	kprintf("R10: %x\n", info->r10);
+	kprintf("R11: %x\n", info->r11);
+	kprintf("R12: %x\n", info->r12);
+	kprintf("R13: %x\n", info->r13);
+	kprintf("R14: %x\n", info->r14);
+	kprintf("R15: %x\n", info->r15);
 }
 
 // Initialize the interrupts table
 void kernel_interrupts_main() {
 	memset(kernel_interrupts_table, 0, sizeof(kernel_interrupts_table));
-	kernel_interrupts_table[0xd] = kernel_interrupts_gpf;
 }
 
 // Get the name of a CPU interrupt
@@ -124,14 +101,14 @@ void kernel_isrhandler(kisrcall_t* info) {
 	kinterrupt_t func = kernel_interrupts_get(info->isr_number);
 	if (func) {
 		if (func(info) == IRQ_FAILURE) {
-			vga_printf("Fatal ISR.\n");
-			print_info(info);
+			kprintf("Interrupt handler resulted in failure.\n");
+			//print_info(info);
 			asm("hlt");
 		}
 		// Interrupt handler success
 	}
 	else {
-		vga_printf("Unhandled interrupt.\n");
+		kprintf("Unhandled interrupt.\n");
 		print_info(info);
 		asm("hlt");
 	}

@@ -9,8 +9,6 @@
 #define VGA_HEIGHT 25
 #define VGA_CHAR(bg, fg, ch) ((ch) | ((bg << 12) | (fg << 8)))
 
-
-
 unsigned char vga_row = 0, vga_col = 0;
 uint16_t* vga_history = (uint16_t*)0xb8000;
 // Up & down backbuffers.
@@ -22,7 +20,7 @@ void vga_init() {
 	memset(vga_dn_backbuffer, 0, sizeof(vga_dn_backbuffer));
 }
 
-void vga_putc(char ch) {
+void kputc(char ch) {
 	if (ch == '\n') {
 		vga_col = 0;
 		if (++vga_row >= VGA_HEIGHT) {
@@ -41,17 +39,17 @@ void vga_putc(char ch) {
 	}
 }
 
-static void vga_put_hexdata(const void* data, size_t size) {
+static void kputhex(const void* data, size_t size) {
 	const unsigned char* bytes = (const unsigned char*)data;
 	static const char hb[] = "0123456789abcdef";
 
 	for (int i = size-1; i >= 0; i--) {
-		vga_putc(hb[(bytes[i] & 0xf0) >> 4]);
-		vga_putc(hb[(bytes[i] & 0x0f)]);
+		kputc(hb[(bytes[i] & 0xf0) >> 4]);
+		kputc(hb[(bytes[i] & 0x0f)]);
 	}
 }
 
-void vga_printf(const char* format, ...) {
+void kprintf(const char* format, ...) {
 	va_list ap;
 	va_start(ap, format);
 
@@ -59,23 +57,23 @@ void vga_printf(const char* format, ...) {
 
 	for (size_t i = 0; i < len; i++) {
 		if (format[i] != '%' || i+1 >= len) {
-			vga_putc(format[i]);
+			kputc(format[i]);
 			continue;
 		}	
 
 		switch (format[i+1]) {
 			case '%': {
-				vga_putc('%');
+				kputc('%');
 			} break;
 			case 'x':
 			case 'p': {
 				size_t p = va_arg(ap, size_t);
-				vga_put_hexdata(&p, sizeof(p));
+				kputhex(&p, sizeof(p));
 			} break;
 			case 's': {
 				const char* s = va_arg(ap, const char*);
 				while (*s) {
-					vga_putc(*s);
+					kputc(*s);
 					s++;
 				}
 			} break;

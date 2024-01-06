@@ -43,7 +43,9 @@ global idt_init
 ; Must be data section. We initialize it programatically, unfortunately.
 section .data
 idt:
-	times 256 dq 0
+	; Each IDT entry in 64 bits is 16 bytes
+	; 2 Quad words, 256 entries.
+	times 256 resq 2
 .end:
 
 section .rodata
@@ -127,8 +129,6 @@ error_isr%1:
 	push %1
 	jmp isr_handler
 %endmacro
-
-global isr_handler
 
 isr 0
 isr 1  

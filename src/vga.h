@@ -19,8 +19,12 @@ typedef enum {
 	VGA_COLOR_WHITE = 15,
 } vga_color_e;
 
-void vga_color(unsigned char fg, unsigned char bg);
-void vga_clear();
-void vga_putc(char ch);
-void vga_puts(const char* str);
-void vga_printf(const char* fmt, ...);
+typedef struct kcolor_s {
+	unsigned char fg, bg;
+} kcolor_t;
+
+void kcolor(kcolor_t clr);
+void kclear();
+void kputc(char ch);
+void kputs(const char* str);
+void kprintf(const char* fmt, ...);

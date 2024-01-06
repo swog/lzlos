@@ -44,23 +44,23 @@ int kbd_irq(kisrcall_t *info) {
 		} break;
 		// backspace
 		case 0xe: {
-			vga_putc('\b');
+			kputc('\b');
 		} break;
 		// enter
 		case 0x1c: {
-			vga_putc('\n');
+			kputc('\n');
 		} break;
 		default:
 			if (key <= 128) {
 				if (kps2_uppercase) {
-					vga_putc(uppercase[key]);
+					kputc(uppercase[key]);
 				}
 				else {
-					vga_putc(lowercase[key]);
+					kputc(lowercase[key]);
 				}
 			}
 			else {
-				//vga_putc('?');
+				//kputc('?');
 			}
 	}
 
