@@ -1,12 +1,26 @@
-	Malloc called in a usermode function can return the physical address of the 
-block descriptor. The block descriptor would hold the physical address of the 
-actual heap. The kernel would change the page table for the user application 
-to translate the virtual address of the block descriptor to the physical address 
-of the heap.
+System Memory
 
-	When freeing the heap, the kernel will know exactly where the descriptor is.
- It would be able to dereference the heap descriptor using the kernel's identity 
-page table. It could then locate the exact physical address and size to free.
+	Currently, OS memory is fully kernel. The kernel assumes the page 0x200_000 is 2 MB
+and is used to hold all heap memory. The heap is simply O(n) to search for a free heap.
+
+Theoretical Model
+
+	TODO: Implement a higher-half kernel. This would allow for kernel process(es)
+to assume a process' page table. Assuming a process page table could allow for translation
+to a page descriptor. A kernel process in the higher half-kernel would be able to distinguish
+usermode and kernel addresses - an added security measure.
+
+	I.e. 
+	User table:
+		0x100_000 points to a buffer in physical memory.
+
+	Kernel table, post translation:
+		0x100_000 points to a descriptor of the user table.
+
+	Note that setting the page table is a privileged operation, must be ring 0.
+Memory mapping functions would require a system call (via the sys library or mmap).
+
+System Library
 
 	The `sys` library connects libc to the kernel. Sys will eventually take care
 of file system operations (once implemented). In my libgcc implementation, sys_*
@@ -17,4 +31,41 @@ will be located in the first 2MB page. When libgcc is loaded into an executable,
 it will independently define these syscall functions. For any executable, kernel
 memory cannot reside in the process' page table. Since the page table can reside
 outside of it's mapped memory, a system call can then change the page table how
-it wishes.
+it wishes. 
+
+	The libgcc's sys.h header calls the 0x80 interrupt. The interrupt handlers
+for various sys library functions is located in sys.c in the root src directory.
+
+Keyboard Library (KBD, formerly KPS2)
+
+	Before enabling maskable interrupts, the programmable interrupt controller
+needs to be configured. This is done in the `pic` library. 
+
+	void pic_remap(int master, int slave) 
+	
+	To avoid PIC interrupts interfering with software and CPU interrupts, the PIC
+allows for remapping. For compatibility sake, the kernel remaps the PIC's master and
+slave to 0x20 and 0x28, respectively. The kernel then sets the PIC's mask for master to
+~2, which blocks all vectors that are not within [0,4]. Furthermore, the slave's pic is 
+set to ~0, which blocks all slave vectors from being handled. 
+
+	The master, and slave PIC and their corresponding I/O port. Source: https://wiki.osdev.org/8259_PIC
+
+	Chip - Purpose 		| I/O Port
+	----------------------------------
+	Master - Command 	| 0x20
+	Master - Data		| 0x21
+	Slave - Command		| 0x28
+	Slave - Data		| 0x29
+
+	Thus, 0x21 is remapped to the input data of the keyboard.
+
+	Most likely the PS/2 port is a compatibility port. This port handles
+communication between the CPU and the keyboard.  After maskable interrupts are 
+enabled with the STI instruction, non-maskable interrupt 0x21 (IRQ_KEYBOARD) 
+is called. Now in the interrupt handler, kbd_irq accesses the input byte at 
+I/O port 0x60. 
+
+
+
+
