@@ -39,7 +39,7 @@ void kernel_interrupts_set(unsigned char index,
 	kinterrupt_t callback);
 
 // Interrupts table
-extern kinterrupt_t kernel_interrupts_table[256];
+extern kinterrupt_t* kernel_interrupts_table[256];
 
 const char* kernel_interrupts_name(unsigned char num);
 
