@@ -1,7 +1,25 @@
+
+Memory Holdbacks
+
+	When we switch to a higher-half kernel (ffffffff`00000000), these are the memory 
+requirements:
+
+	1. VGA/Video memory location, 0xb8000
+	2. Interrupt descriptor table ~ 0x100`000
+	3. System library kernel code, but these are not linkable under the current kernel.
+	4. Global descriptor table ~ 0x100`000
+	5. Heap memory (this was meant to be changed) ~ 0x200`000.
+	
+	Overall, the lower memory regions can just be translated by the kernel's page table.
+We can leave loaded pre-kernel memory regions, but load user programs after 0x200`000.
+
+
 System Memory
 
 	Currently, OS memory is fully kernel. The kernel assumes the page 0x200_000 is 2 MB
 and is used to hold all heap memory. The heap is simply O(n) to search for a free heap.
+
+
 
 Theoretical Model
 
@@ -19,6 +37,8 @@ usermode and kernel addresses - an added security measure.
 
 	Note that setting the page table is a privileged operation, must be ring 0.
 Memory mapping functions would require a system call (via the sys library or mmap).
+
+
 
 System Library
 
