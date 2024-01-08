@@ -25,7 +25,7 @@ typedef struct kisrcall_s kisrcall_t;
 
 // Return 0 on failure to return execution; halt.
 // Return 1 to continue execution.
-typedef int (*kinterrupt_t)(kisrcall_t* info);
+typedef int kinterrupt_t(kisrcall_t* info);
 
 // Main interrupt handler called from idt.asm
 void kernel_isrhandler(kisrcall_t* info);

@@ -41,7 +41,7 @@ static const char* exception_names[] = {
 	// Kernel-defined exceptions
 };
 
-kinterrupt_t kernel_interrupts_table[256];
+kinterrupt_t* kernel_interrupts_table[256];
 
 static void print_info(kisrcall_t* info) {
 	const char* name = kernel_interrupts_name(info->isr_number);
@@ -87,18 +87,18 @@ const char* kernel_interrupts_name(unsigned char num) {
 	return NULL;
 }
 
-kinterrupt_t kernel_interrupts_get(unsigned char num) {
+kinterrupt_t* kernel_interrupts_get(unsigned char num) {
 	return kernel_interrupts_table[num];
 }
 
-void kernel_interrupts_set(unsigned char num, kinterrupt_t func) {
+void kernel_interrupts_set(unsigned char num, kinterrupt_t* func) {
 	kernel_interrupts_table[num] = func;
 }
 
 // Handle kernel interrupt vectors
 void kernel_isrhandler(kisrcall_t* info) {
 	// Halt if there is no interrupt handler, or the handler failed to resume execution.
-	kinterrupt_t func = kernel_interrupts_get(info->isr_number);
+	kinterrupt_t* func = kernel_interrupts_get(info->isr_number);
 	if (func) {
 		if (func(info) == IRQ_FAILURE) {
 			kprintf("Interrupt handler resulted in failure.\n");
