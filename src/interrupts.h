@@ -43,6 +43,6 @@ extern kinterrupt_t kernel_interrupts_table[256];
 
 const char* kernel_interrupts_name(unsigned char num);
 
-kinterrupt_t kernel_interrupts_get(unsigned char num);
+kinterrupt_t* kernel_interrupts_get(unsigned char num);
 
 #endif
