@@ -7,7 +7,7 @@ FILE* stdout = (FILE*)STDOUT_FILENO;
 FILE* stdin = (FILE*)STDIN_FILENO;
 
 int putchar(int ch) {
-	sys_write(STDOUT_FILENO, &ch, 1);
+	fwrite(&ch, 1, 1, stdout);
 
 	return ch;
 }
@@ -17,13 +17,13 @@ int puts(const char* str) {
 	size_t len = strlen(str);
 	size_t ret = 0;
 
-	ret = sys_write(STDOUT_FILENO, str, len);
+	ret = fwrite(str, len, 1, stdout);
 
 	if (ret != len) {
 		return 1;
 	}
 
-	ret = sys_write(STDOUT_FILENO, &newline, 1);
+	ret = fwrite(&newline, 1, 1, stdout);
 
 	if (ret != 1) {
 		return 2;

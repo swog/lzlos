@@ -15,10 +15,13 @@ void free(void* base) {
 // `dst` can be null.
 // `size` can be null.
 //
-// 	This function has the perfect design scheme, since the
+// 	This function has a good design scheme, since the
 // required size of an ULL is unknown. Calling this function
 // twice is memory-economical, and speed-efficient enough for
-// this function.
+// this function. 
+//
+// swog
+//
 size_t ulltostr(unsigned long long num, int base, char* dst, size_t size) {
 	const char* table = "0123456789abcdef";
 	unsigned long long digit;	

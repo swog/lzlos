@@ -56,6 +56,8 @@ int vsprintf(char* dst, const char* format, va_list ap) {
 			
 		}
 	}
+
+	return 0;
 }
 
 // String concatenate simple
@@ -90,17 +92,17 @@ char* strcat(char* dst, const char* src) {
 	return dst;
 }
 
-char* strchr(const char* str, int c) {
-	char* ptr = (char*)str;
-	
-	while (*ptr) {
-		if (*ptr == c) {
-			return ptr;
+/*
+const char* strchr(const char* str, int c) {
+	while (*str) {
+		if (*str == c) {
+			return str;
 		}
 	}
 	
 	return NULL;
 }
+*/
 
 int isxdigit(int ch) {
 	return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
@@ -157,8 +159,8 @@ int strcmp(const char* str1, const char* str2) {
 }
 
 int memcmp(const void* ptr1, const void* ptr2, size_t num) {
-	const unsigned char* str1 = ptr1;
-	const unsigned char* str2 = ptr2;
+	const unsigned char* str1 = (const unsigned char*)ptr1;
+	const unsigned char* str2 = (const unsigned char*)ptr2;
 
 	for (size_t i = 0; i < num; i++) {
 		if (str1[i] != str2[i]) {

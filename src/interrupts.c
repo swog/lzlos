@@ -2,7 +2,6 @@
 #include "vga.h"
 #include "kdefs.h"
 #include "kpic.h"
-#include "libgcc/sys.h"
 #include <string.h>
 
 static const char* exception_names[] = {
@@ -100,6 +99,7 @@ void kernel_isrhandler(kisrcall_t* info) {
 	// Halt if there is no interrupt handler, or the handler failed to resume execution.
 	kinterrupt_t* func = kernel_interrupts_get(info->isr_number);
 	if (func) {
+	
 		if (func(info) == IRQ_FAILURE) {
 			kprintf("Interrupt handler resulted in failure.\n");
 			//print_info(info);

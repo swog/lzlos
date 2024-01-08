@@ -2,7 +2,7 @@ AS := nasm
 AS_FLAGS := -f elf64
 
 CC := gcc
-CC_FLAGS := -ffreestanding -Wall -fno-stack-protector
+CC_FLAGS := -nostdlib -nodefaultlibs -ffreestanding -Wall -fno-stack-protector
 
 LD := ld
 
@@ -30,7 +30,7 @@ $(C_OBJS): $(C_FILES)
 
 $(LIBC_OBJS): $(LIBC_FILES)
 	mkdir -p $(dir $@) && \
-	$(CC) -c $(CC_FLAGS) -I./src $(CC_FLAGS) $(patsubst bin/%.o, src/%.c, $@) -o $@
+	$(CC) -c $(CC_FLAGS) -I./src $(patsubst bin/%.o, src/%.c, $@) -o $@
 
 # Might need to add more LIBC assembly files
 bin/libgcc/sys.o: src/libgcc/sys.asm
@@ -38,8 +38,7 @@ bin/libgcc/sys.o: src/libgcc/sys.asm
 	$(AS) $(AS_FLAGS) $< -o $@
 
 .PHONY: build-libgcc
-build-libgcc: $(LIBC_OBJS) bin/libgcc/sys.o
-	
+build-libgcc: $(LIBC_OBJS) bin/libgcc/sys.o	
 	$(AR) -rcs bin/libgcc.a $(LIBC_OBJS) bin/libgcc/sys.o
 
 .PHONY: build

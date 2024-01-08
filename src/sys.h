@@ -14,13 +14,15 @@
 #define SYS_OPEN 	2
 #define SYS_CLOSE 	3
 
+#define SYS_EXECVE	59
+
 #include <stdio.h>
 
 // Kernel counterparts
-size_t ksys_read(size_t fd, void* buf, size_t size);
-size_t ksys_write(size_t fd, const void* buf, size_t size);
-size_t ksys_open(const char* filename, size_t flags, size_t size);
-size_t ksys_close(size_t fd);
+size_t kfread(void* buf, size_t size, size_t count, FILE* f);
+size_t kfwrite(const void* buf, size_t size, size_t count, FILE* f);
+FILE* kfopen(const char* filename, const char* mode);
+size_t kfclose(FILE* f);
 
 // ISR call stack kdefs
 typedef struct kisrcall_s kisrcall_t;

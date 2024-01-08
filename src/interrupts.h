@@ -36,7 +36,7 @@ void kernel_interrupts_main();
 
 // Set callback
 void kernel_interrupts_set(unsigned char index,
-	kinterrupt_t callback);
+	kinterrupt_t* callback);
 
 // Interrupts table
 extern kinterrupt_t* kernel_interrupts_table[256];
