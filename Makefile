@@ -13,14 +13,17 @@ AR := ar
 # This allows us to create object files out of binaries
 OBJCOPY := objcopy
 
-AS_FILES := $(shell find src/boot -maxdepth 1 -name *.asm)
-AS_OBJS := $(patsubst src/%.asm, bin/%.o, $(AS_FILES))
+BOOT_FILES := $(shell find src/boot -maxdepth 1 -name *.asm)
+BOOT_OBJS := $(patsubst src/%.asm, bin/%.o, $(BOOT_FILES))
 
 C_FILES := $(shell find src -maxdepth 1 -name *.c)
 C_OBJS := $(patsubst src/%.c, bin/%.o, $(C_FILES))
 
 LIBC_FILES := $(shell find src/libgcc -name *.c)
 LIBC_OBJS := $(patsubst src/%.c, bin/%.o, $(LIBC_FILES))
+
+LIBC_FILES_AS := $(shell find src/libgcc -name *.asm)
+LIBC_OBJS_AS := $(patsubst src/%.asm, bin/%.o, $(LIBC_FILES_AS))
 
 # Included binary files into objects
 INCBIN := $(shell find src/incbin -name *.bin)
@@ -31,9 +34,9 @@ LIBC := -L./bin -lgcc
 LD_FLAGS := -T linker.ld 
 
 # Assemble assembly files
-$(AS_OBJS): $(AS_FILES)
+$(BOOT_OBJS) $(LIBC_OBJS_AS): $(BOOT_FILES) $(LIBC_FILES_AS)
 	mkdir -p $(dir $@) && \
-	$(AS) $(AS_FLAGS) $(patsubst bin/%.o, src/%.asm, $@) -o $@
+	$(AS) -felf64 $(patsubst bin/%.o, src/%.asm, $@) -o $@
 
 # Compile c kernel files
 $(C_OBJS): $(C_FILES)
@@ -45,16 +48,11 @@ $(LIBC_OBJS): $(LIBC_FILES)
 	mkdir -p $(dir $@) && \
 	$(CC) -c $(CC_FLAGS) -I./src $(patsubst bin/%.o, src/%.c, $@) -o $@
 
-# Might need to add more LIBC assembly files
-# Assembles libc assembly file
-bin/libgcc/sys.o: src/libgcc/sys.asm
-	mkdir -p $(dir $@) && \
-	$(AS) $(AS_FLAGS) $< -o $@
-
+# Link all libc prerequisite object files into a static library
 .PHONY: build-libgcc
-build-libgcc: $(LIBC_OBJS) bin/libgcc/sys.o
+build-libgcc: $(LIBC_OBJS) $(LIBC_OBJS_AS)
 	mkdir -p bin/libgcc && \
-	$(AR) -rcs bin/libgcc.a $(LIBC_OBJS) bin/libgcc/sys.o
+	$(AR) -rcs bin/libgcc.a $?
 
 # This won't run if the prerequisites aren't updated.
 # Target is object files
@@ -68,8 +66,8 @@ $(INCBIN_OBJS): $(INCBIN)
 build-incbin: $(INCBIN_OBJS)
 
 .PHONY: build
-build: $(C_OBJS) $(AS_OBJS)
-	$(LD) -n $(LD_FLAGS) $(C_OBJS) $(AS_OBJS) $(LIBC) $(INCBIN_OBJS) -o bin/kernel.bin && \
+build: $(C_OBJS) $(BOOT_OBJS) $(INCBIN_OBJS)
+	$(LD) -n $(LD_FLAGS) $(C_OBJS) $(BOOT_OBJS) $(LIBC) $(INCBIN_OBJS) -o bin/kernel.bin && \
 	cp bin/kernel.bin iso/boot/kernel.bin && \
 	grub-mkrescue iso -o lzlos.iso
 
