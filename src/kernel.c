@@ -28,7 +28,7 @@ void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
-	printf("%p\n", kernel_main);
+	printf("hello, world %p\n", kernel_main);
 	//vga_putc('a');
 }
 
