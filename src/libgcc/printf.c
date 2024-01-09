@@ -15,6 +15,11 @@ int vprintf(const char* format, va_list ap) {
 		}
 
 		switch (format[i+1]) {
+		case 'c': {
+			int c = va_arg(ap, int);
+			putchar(c);
+			i++;
+		} break;
 		case 'l':
 		case 'i': {
 			char buf[32];

@@ -41,7 +41,7 @@ global idt_init
 %endmacro
 
 ; Must be data section. We initialize it programatically, unfortunately.
-section .data
+section .bss
 idt:
 	; Each IDT entry in 64 bits is 16 bytes
 	; 2 Quad words, 256 entries.

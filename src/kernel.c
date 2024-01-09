@@ -9,6 +9,9 @@
 #include "vga.h"
 #include "interrupts.h"
 
+extern uint8_t test_bin[] asm("_binary_src_incbin_test_bin_start");
+extern uint8_t test_size[] asm("_binary_src_incbin_test_bin_size");
+
 void kernel_main(int mbi) {
 	// Remap after hardware NMIs
 	pic_remap(0x20, 0x28);
@@ -28,7 +31,10 @@ void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
-	printf("hello, world %p\n", kernel_main);
+	for (size_t i = 0; i < (size_t)test_size; i++) {
+		printf("%c", test_bin[i]);
+	}
+
 	//vga_putc('a');
 }
 

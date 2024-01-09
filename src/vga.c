@@ -20,22 +20,52 @@ void vga_init() {
 	memset(vga_dn_backbuffer, 0, sizeof(vga_dn_backbuffer));
 }
 
-void kputc(char ch) {
-	if (ch == '\n') {
-		vga_col = 0;
-		if (++vga_row >= VGA_HEIGHT) {
-			vga_row = 0;
-		}
-		return;
-	}
+// Refactor set
+void vga_setw(int row, int col, uint16_t c) {
+	vga_history[row*VGA_WIDTH+col] = c;
+}
 
-	vga_history[vga_row*VGA_WIDTH+vga_col] = VGA_CHAR(VGA_COLOR_BLACK, VGA_COLOR_GREEN, ch);
-
+// Increment column
+// Expected to increment row if column overflow
+void vga_incw() {
 	if (++vga_col >= VGA_WIDTH) {
 		vga_col = 0;
 		if (++vga_row >= VGA_HEIGHT) {
 			vga_row = 0;
 		}
+	}
+}
+
+// Increment row (height)
+void vga_inch() {
+	vga_col = 0;
+	if (++vga_row >= VGA_HEIGHT) {
+		vga_row = 0;
+	}
+}
+
+// Refactor get
+uint16_t vga_getw(int row, int col) {
+	return vga_history[row*VGA_WIDTH+col];
+}
+
+void kputc(char ch) {
+	switch (ch) {
+	case '\n': {
+		vga_inch();
+	} break;
+	case '\r': {
+	} break;
+	case '\t': {
+		kputc(' ');
+		kputc(' ');
+	} break;
+	case '\b': {
+		//vga_
+	} break;
+	default:
+		vga_setw(vga_row, vga_col, VGA_CHAR(VGA_COLOR_BLACK, VGA_COLOR_GREEN, ch));
+		vga_incw();
 	}
 }
 

@@ -121,6 +121,7 @@ error:
 	cli
 	hlt
 
+section .bss
 align 4096
 stack_bottom:
 	resb 4096*4

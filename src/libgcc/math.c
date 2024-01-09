@@ -23,7 +23,7 @@ double round(double x) {
 
 double floor(double x) {
 	double integral = 0.0;
-	double frac = modf(x, &integral);
+	modf(x, &integral);
 	return integral;
 }
 
