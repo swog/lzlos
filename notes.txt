@@ -1,5 +1,7 @@
 
+
 Memory Holdbacks
+----------------
 
 	When we switch to a higher-half kernel (ffffffff`00000000), these are the memory 
 requirements:
@@ -15,6 +17,7 @@ We can leave loaded pre-kernel memory regions, but load user programs after 0x20
 
 
 System Memory
+-------------
 
 	Currently, OS memory is fully kernel. The kernel assumes the page 0x200_000 is 2 MB
 and is used to hold all heap memory. The heap is simply O(n) to search for a free heap.
@@ -22,6 +25,7 @@ and is used to hold all heap memory. The heap is simply O(n) to search for a fre
 
 
 Theoretical Model
+-----------------
 
 	TODO: Implement a higher-half kernel. This would allow for kernel process(es)
 to assume a process' page table. Assuming a process page table could allow for translation
@@ -41,6 +45,7 @@ Memory mapping functions would require a system call (via the sys library or mma
 
 
 System Library
+--------------
 
 	The `sys` library connects libc to the kernel. Sys will eventually take care
 of file system operations (once implemented). In my libgcc implementation, sys_*
@@ -56,7 +61,32 @@ it wishes.
 	The libgcc's sys.h header calls the 0x80 interrupt. The interrupt handlers
 for various sys library functions is located in sys.c in the root src directory.
 
+
+System Library Flow Chart
+-------------------------
+
+	It is important to note that libgcc is a standalone binary that defines
+os-specific system calls. As the name suggests, it also implements libc standard
+system calls for I/O and also defines utility functions such as `exp`.
+
+	Step	File		Method		Description
+	------------------------------------------------------------------------------------
+	1	libgcc/sys.asm	sys		  Macro creates system call (interrupt 0x80) 
+						with specific rax value.
+
+	2	sys.c		ksys_main	  Uses `kernel_interrupt_set` to setup int
+						0x80 ISR (Interrupt Service Routine).
+
+	3	sys.c		ksys_irq	  This handles all software system calls.
+						For the time being (as of Jan 9, 24), each
+						function call is independently handled thru
+						a switch statement. This may not scale 
+						correctly as the number of system calls 
+						increases. It could be replaced with a table.
+
+
 Keyboard Library (KBD, formerly KPS2)
+-------------------------------------
 
 	Before enabling maskable interrupts, the programmable interrupt controller
 needs to be configured. This is done in the `pic` library. 
@@ -66,8 +96,9 @@ needs to be configured. This is done in the `pic` library.
 	To avoid PIC interrupts interfering with software and CPU interrupts, the PIC
 allows for remapping. For compatibility sake, the kernel remaps the PIC's master and
 slave to 0x20 and 0x28, respectively. The kernel then sets the PIC's mask for master to
-~2, which blocks all vectors that are not within [0,4]. Furthermore, the slave's pic is 
-set to ~0, which blocks all slave vectors from being handled. 
+~2, which blocks all vectors that are not within indices 0 & 1. Each bit corresponds to 
+an index in the IDT. Furthermore, the slave's pic is set to ~0, which blocks all slave 
+vectors from being handled. 
 
 	The master, and slave PIC and their corresponding I/O port. Source: https://wiki.osdev.org/8259_PIC
 
