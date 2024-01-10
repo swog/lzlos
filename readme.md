@@ -5,7 +5,8 @@
 <p>Optionally, sudo apt install qemu</p>
 
 <h2>How to build:</h2>
-<p>In the root directory, type `make all`</p>
+<p>In the root directory, type `make all`.
+If done correctly, an iso will be created in the root directory.</p>
 
 <h2>How to run:</h2>
 <p>With qemu, type `make run`.
