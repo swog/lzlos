@@ -51,7 +51,6 @@ $(LIBC_OBJS): $(LIBC_FILES)
 # Link all libc prerequisite object files into a static library
 .PHONY: build-libgcc
 build-libgcc: $(LIBC_OBJS) $(LIBC_OBJS_AS)
-	mkdir -p bin/libgcc && \
 	$(AR) -rcs bin/libgcc.a $?
 
 # This won't run if the prerequisites aren't updated.
@@ -72,7 +71,7 @@ build: $(C_OBJS) $(BOOT_OBJS) $(INCBIN_OBJS)
 	grub-mkrescue iso -o lzlos.iso
 
 .PHONY: all
-all: clean build-libgcc build-incbin build
+all: build-libgcc build-incbin build
 
 .PHONY: clean
 clean:

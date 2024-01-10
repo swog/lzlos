@@ -16,4 +16,16 @@
 //
 size_t ulltostr(unsigned long long num, int base, char* dst, size_t size);
 
+typedef int (*putchar_t)(int ch);
+typedef size_t (*fwrite_t)(const void* buf, size_t size, size_t count, FILE* f);
+
+// Variadic OS printf with custom stdio functions
+int _vprintf(const char* format, va_list ap, putchar_t putchar, fwrite_t fwrite);
+
+// LZLOS Thread Environment Block
+typedef struct _lzlos_teb {
+	size_t 	image_size;
+	void* 	image_base; // Base physical address
+} lzlos_teb;
+
 #endif

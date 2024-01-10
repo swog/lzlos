@@ -15,6 +15,7 @@
 #define SYS_CLOSE 	3
 
 #define SYS_EXECVE	59
+#define SYS_EXIT	60
 
 #include <stdio.h>
 

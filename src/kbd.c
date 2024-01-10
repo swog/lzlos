@@ -67,7 +67,7 @@ int kbd_irq(kisrcall_t *info) {
 			}
 		}
 		else {
-				//kputc('?');
+			//kputc('?');
 		}
 	}
 

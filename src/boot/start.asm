@@ -23,6 +23,8 @@ start:
 
 	lgdt [gdt64r]
 
+	call init_tss
+
 	; Can't pop 32 bit ebx in 64 bit
 	pop ebx
 
@@ -44,6 +46,20 @@ clear:
 	mov word [ecx], 0
 
 	pop eax
+	ret
+
+	; Initialize the tss segment to point to the linear address of TSS
+init_tss:
+	mov eax, tss
+	mov ebx, gdt64.tss_segment
+	
+	mov word [ebx+2], ax
+	
+	shr eax, 16
+
+	mov byte [ebx+4], al
+	mov byte [ebx+7], ah
+
 	ret
 
 	; ===========================================
@@ -135,11 +151,13 @@ err_no_multiboot:
 err_no_long_mode:
 	db "ERR: Your system does not support 64 bit long mode! Haulting.", 0
 
+; The GDT was loaded in 32 bit.. these are all 32 bit descriptors!
 section .data
 global gdt64
 gdt64:
 	; Always starts with zero
 	dq 0 ; zero entry
+	; 0x8
 .code_segment: equ $ - gdt64
 	dw 0
 	dw 0
@@ -147,6 +165,7 @@ gdt64:
 	db (1<<3)|(1<<4)|(1<<7) ; Executable, code segment, present
 	db (1<<5) ; Long mode
 	db 0
+	; 0x10
 .data_segment: equ $ - gdt64
 	dw 0
 	dw 0
@@ -156,23 +175,27 @@ gdt64:
 	db 0
 	; 0x18
 .tss_segment: equ $ - gdt64
-	dw tss.end - tss
-	dw 0
-	db 0
-	db 0x9 | (1<<7) ; Available TSS type, present
-	db 0
-	db 0
-gdt64r:
-	dw $ - gdt64 - 1
-	dq gdt64
+	dw tss.end - tss	; Limit 0-15
+	dw 0			; Base 0-15
+	db 0			; Base 16-31
+				
+				; Access byte
+	db 0x9 | (1<<7) 	; Available TSS type, present
+				
+				; Set flags to long mode
+	dw (1<<5)		; Base, Flags, Limit byte
+.end:
 
 global tss
 tss:
 	dd 0 ; Reserved
+	; RSP values are stack pointers used for the changing of privilege levels
 	dq stack_top ; Rsp0
 	dq stack_top ; Rsp1
 	dq stack_top ; Rsp2
 	dq 0 ; Reserved
+	; IST values are used if the IDT has an IST selected. The IDT stack selector
+	; is only used if it is not zero, hence Ist1.
 	dq stack_top ; Ist1
 	dq stack_top ; Ist2
 	dq stack_top ; Ist3
@@ -183,3 +206,10 @@ tss:
 	dq 0 ; Reserved
 	dd 0 ; IOPB
 .end:
+
+section .rodata
+gdt64r:
+	dw gdt64.end - gdt64 - 1
+	dq gdt64
+
+

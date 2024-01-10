@@ -1,9 +1,12 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include "vga.h"
 #include "kdefs.h"
-#include <stdlib.h>
+#include "sys.h"
+#include "libgcc/lzlos.h"
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
@@ -12,12 +15,10 @@
 unsigned char vga_row = 0, vga_col = 0;
 uint16_t* vga_history = (uint16_t*)0xb8000;
 // Up & down backbuffers.
-uint16_t vga_up_backbuffer[VGA_HEIGHT][VGA_WIDTH];
-uint16_t vga_dn_backbuffer[VGA_HEIGHT][VGA_WIDTH];
+uint16_t vga_backbuffer[VGA_HEIGHT][VGA_WIDTH];
 
-void vga_init() {
-	memset(vga_up_backbuffer, 0, sizeof(vga_up_backbuffer));
-	memset(vga_dn_backbuffer, 0, sizeof(vga_dn_backbuffer));
+void vga_main() {
+	memset(vga_backbuffer, 0, sizeof(vga_backbuffer));
 }
 
 // Refactor set
@@ -36,6 +37,44 @@ void vga_incw() {
 	}
 }
 
+// Refactor get
+uint16_t vga_getw(int row, int col) {
+	return vga_history[row*VGA_WIDTH+col];
+}
+
+// Hacky with libgcc.
+// Temporary, libc uses some character trait tables or something..
+int _isblank(int ch);
+
+// Decrement column
+// Expected to decrement row if column overflow
+void vga_decw() {
+	if (vga_col-- == 0) {
+		if (vga_row-- == 0) {
+			vga_row = 0;
+		}
+
+		vga_col = VGA_WIDTH-1;
+
+		// Rewind while column > 0 and getw is black
+		while (vga_col > 0) {
+			char c = 0xff & vga_getw(vga_row, vga_col);
+
+			if (c == '\n') {
+				break;
+			}
+
+			vga_col--;
+		}
+
+		for (int y = vga_row+1; y < VGA_HEIGHT-1; y++) {
+			memcpy(&vga_history[y*VGA_WIDTH], &vga_history[(y+1)*VGA_WIDTH], VGA_WIDTH*2);
+		}
+
+		memset(&vga_history[(VGA_HEIGHT-1)*VGA_WIDTH], 0, VGA_WIDTH*2);
+	}
+}
+
 // Increment row (height)
 void vga_inch() {
 	vga_col = 0;
@@ -44,16 +83,15 @@ void vga_inch() {
 	}
 }
 
-// Refactor get
-uint16_t vga_getw(int row, int col) {
-	return vga_history[row*VGA_WIDTH+col];
-}
-
-void kputc(char ch) {
+int kputc(int ch) {
 	switch (ch) {
 	case '\n': {
+		// Put newline before EOL
+		vga_setw(vga_row, vga_col, VGA_CHAR(VGA_COLOR_BLACK, VGA_COLOR_BLACK, ch));
+		// Increment height
 		vga_inch();
 	} break;
+	// Ignore
 	case '\r': {
 	} break;
 	case '\t': {
@@ -61,59 +99,37 @@ void kputc(char ch) {
 		kputc(' ');
 	} break;
 	case '\b': {
-		//vga_
+		vga_decw();
+		// Replace with empty space
+		kputc(' ');
+		vga_decw();
 	} break;
 	default:
 		vga_setw(vga_row, vga_col, VGA_CHAR(VGA_COLOR_BLACK, VGA_COLOR_GREEN, ch));
 		vga_incw();
 	}
+
+	return 0;
 }
 
-static void kputhex(const void* data, size_t size) {
-	const unsigned char* bytes = (const unsigned char*)data;
-	static const char hb[] = "0123456789abcdef";
-
-	for (int i = size-1; i >= 0; i--) {
-		kputc(hb[(bytes[i] & 0xf0) >> 4]);
-		kputc(hb[(bytes[i] & 0x0f)]);
+int kputs(const char* s) {
+	while (*s) {
+		kputc(*s);
+		s++;
 	}
+	// Spec...
+	kputc('\n');
+	return 0;
 }
 
-void kprintf(const char* format, ...) {
+int kprintf(const char* format, ...) {
 	va_list ap;
 	va_start(ap, format);
-
-	size_t len = strlen(format);
-
-	for (size_t i = 0; i < len; i++) {
-		if (format[i] != '%' || i+1 >= len) {
-			kputc(format[i]);
-			continue;
-		}	
-
-		switch (format[i+1]) {
-			case '%': {
-				kputc('%');
-			} break;
-			case 'x':
-			case 'p': {
-				size_t p = va_arg(ap, size_t);
-				kputhex(&p, sizeof(p));
-			} break;
-			case 's': {
-				const char* s = va_arg(ap, const char*);
-				while (*s) {
-					kputc(*s);
-					s++;
-				}
-			} break;
-		}
-	
-		i++;
-	}
-
+	_vprintf(format, ap, kputc, kfwrite);
 	va_end(ap);
+	return 0;
 }
+
 
 
 

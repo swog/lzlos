@@ -27,12 +27,13 @@ void kernel_main(int mbi) {
 	ksys_main();	
 	// Lastly initialize kbd interrupt handler
 	kbd_main();
+	vga_main();
 
 	// Enable maskable interrupts
 	set_interrupts();	
 
 	for (size_t i = 0; i < (size_t)test_size; i++) {
-		printf("%c", test_bin[i]);
+		kprintf("%c", test_bin[i]);
 	}
 
 	//vga_putc('a');

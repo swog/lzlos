@@ -64,11 +64,14 @@ long_mode_start:
 	mov fs, ax
 	mov gs, ax
 	mov ds, ax
-
+	
 	; Setup interrupt descriptor table
 	call idt_init
 
 	call kernel_main
+
+	;mov ax, 0x18
+	;ltr ax
 
 	jmp $
 

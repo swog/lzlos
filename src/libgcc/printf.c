@@ -4,8 +4,9 @@
 #include <string.h>
 #include "sys.h"
 #include "kdefs.h"
+#include "lzlos.h"
 
-int vprintf(const char* format, va_list ap) {
+int _vprintf(const char* format, va_list ap, putchar_t putchar, fwrite_t fwrite) {
 	size_t len = strlen(format);
 
 	for (size_t i = 0; i < len; i++) {
@@ -67,6 +68,10 @@ int vprintf(const char* format, va_list ap) {
 	}
 
 	return 0;
+}
+
+int vprintf(const char* format, va_list ap) {
+	return _vprintf(format, ap, putchar, fwrite);
 }
 
 int printf(const char* format, ...) {

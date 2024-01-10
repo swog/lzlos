@@ -23,8 +23,11 @@ typedef struct kcolor_s {
 	unsigned char fg, bg;
 } kcolor_t;
 
+void vga_main();
 void kcolor(kcolor_t clr);
 void kclear();
-void kputc(char ch);
-void kputs(const char* str);
-void kprintf(const char* fmt, ...);
+int kputc(int ch);
+int kputs(const char* str);
+// This calls stdlib's _vprintf with different function parameters.
+// Allows us to only need to use 1 printf function for both kernel & usermode
+int kprintf(const char* fmt, ...);

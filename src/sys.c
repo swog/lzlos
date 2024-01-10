@@ -30,8 +30,13 @@ size_t kfclose(FILE* f) {
 	return 0;
 } 
 
+// SYS_EXECVE 0x59
 int kexecve(const char* path, char* const argv[], char* const envp[]) {
 	return 0;
+}
+
+// SYS_EXIT 0x60
+void kexit(int status) {
 }
 
 void ksys_main() {
@@ -42,28 +47,27 @@ void ksys_main() {
 // rdi, rsi, rdx, rcx
 int ksys_irq(kisrcall_t* info) {
 	switch (info->rax) {
-		case SYS_READ: {
-			return IRQ_SUCCESS;
-		}
-		case SYS_WRITE: {
-			// Hope RCX doesn't interfere with c++... sounds like a fun bug
-			info->rax = kfwrite((const void*)info->rdi, info->rsi, info->rdx, (FILE*)info->rcx);
-			return IRQ_SUCCESS;
-		} 
-		case SYS_OPEN: {
-			return IRQ_SUCCESS;
-		}
-		case SYS_CLOSE: {
-			return IRQ_SUCCESS;
-		}
-		case SYS_EXECVE: {
-			info->rax = kexecve((const char*)info->rdi, (char* const*)info->rsi, (char* const*)info->rdx);
-			return IRQ_SUCCESS;
-		}
+	case SYS_READ: {
+	} break;
+	case SYS_WRITE: {
+		// Hope RCX doesn't interfere with c++... sounds like a fun bug
+		info->rax = kfwrite((const void*)info->rdi, info->rsi, info->rdx, (FILE*)info->rcx);
+	} break;
+	case SYS_OPEN: {
+	} break;
+	case SYS_CLOSE: {
+	} break;
+	case SYS_EXECVE: {
+		info->rax = kexecve((const char*)info->rdi, (char* const*)info->rsi, (char* const*)info->rdx);
+	} break;
+	case SYS_EXIT: {
+		kexit((int)info->rdi);
+	} break;
+	default:
+		return IRQ_FAILURE;
 	}
 
-	// Panic
-	return IRQ_FAILURE;
+	return IRQ_SUCCESS;
 }
 
 

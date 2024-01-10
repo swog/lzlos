@@ -120,6 +120,10 @@ int isupper(int ch) {
 	return ch < 'a';
 }
 
+int _isblank(int ch) {
+	return ch == '\t' || ch == ' ';
+}
+
 size_t strlen(const char* str) {
 	size_t i;
 	for (i = 0; str[i]; i++);
