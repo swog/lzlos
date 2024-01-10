@@ -23,7 +23,7 @@ start:
 
 	lgdt [gdt64r]
 
-	call init_tss
+	call init_gs
 
 	; Can't pop 32 bit ebx in 64 bit
 	pop ebx
@@ -49,9 +49,9 @@ clear:
 	ret
 
 	; Initialize the tss segment to point to the linear address of TSS
-init_tss:
-	mov eax, tss
-	mov ebx, gdt64.tss_segment
+init_gs:
+	mov eax, gs_base
+	mov ebx, gdt64.gs_segment
 	
 	mov word [ebx+2], ax
 	
@@ -151,6 +151,11 @@ err_no_multiboot:
 err_no_long_mode:
 	db "ERR: Your system does not support 64 bit long mode! Haulting.", 0
 
+section .bss
+gs_base:
+	; 2048 bytes
+	times 256 resq 1
+
 ; The GDT was loaded in 32 bit.. these are all 32 bit descriptors!
 section .data
 global gdt64
@@ -174,37 +179,13 @@ gdt64:
 	db (1<<5) ; Long mode
 	db 0
 	; 0x18
-.tss_segment: equ $ - gdt64
-	dw tss.end - tss	; Limit 0-15
-	dw 0			; Base 0-15
-	db 0			; Base 16-31
-				
-				; Access byte
-	db 0x9 | (1<<7) 	; Available TSS type, present
-				
-				; Set flags to long mode
-	dw (1<<5)		; Base, Flags, Limit byte
-.end:
-
-global tss
-tss:
-	dd 0 ; Reserved
-	; RSP values are stack pointers used for the changing of privilege levels
-	dq stack_top ; Rsp0
-	dq stack_top ; Rsp1
-	dq stack_top ; Rsp2
-	dq 0 ; Reserved
-	; IST values are used if the IDT has an IST selected. The IDT stack selector
-	; is only used if it is not zero, hence Ist1.
-	dq stack_top ; Ist1
-	dq stack_top ; Ist2
-	dq stack_top ; Ist3
-	dq stack_top ; Ist4
-	dq stack_top ; Ist5
-	dq stack_top ; Ist6
-	dq stack_top ; Ist7
-	dq 0 ; Reserved
-	dd 0 ; IOPB
+.gs_segment: equ $ - gdt64
+	dw 0
+	dw 0
+	db 0
+	db (1<<1)|(1<<4)|(1<<7)
+	db (1<<5)
+	db 0
 .end:
 
 section .rodata
