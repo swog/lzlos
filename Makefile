@@ -18,6 +18,8 @@ BOOT_OBJS := $(patsubst src/%.asm, bin/%.o, $(BOOT_FILES))
 
 C_FILES := $(shell find src -maxdepth 1 -name *.c)
 C_OBJS := $(patsubst src/%.c, bin/%.o, $(C_FILES))
+AS_FILES := $(shell find src -maxdepth 1 -name *.asm)
+AS_OBJS := $(patsubst src/%.asm, bin/%.o, $(AS_FILES))
 
 LIBC_FILES := $(shell find src/libgcc -name *.c)
 LIBC_OBJS := $(patsubst src/%.c, bin/%.o, $(LIBC_FILES))
@@ -43,6 +45,9 @@ $(C_OBJS): $(C_FILES)
 	mkdir -p $(dir $@) && \
 	$(CC) -c $(CC_FLAGS) $(patsubst bin/%.o, src/%.c, $@) -o $@
 
+$(AS_OBJS): $(AS_FILES)
+	$(AS) -felf64 $(patsubst bin/%.o, src/%.asm, $@) -o $@
+
 # Compile libc c files
 $(LIBC_OBJS): $(LIBC_FILES)
 	mkdir -p $(dir $@) && \
@@ -65,8 +70,8 @@ $(INCBIN_OBJS): $(INCBIN)
 build-incbin: $(INCBIN_OBJS)
 
 .PHONY: build
-build: $(C_OBJS) $(BOOT_OBJS) $(INCBIN_OBJS)
-	$(LD) -n $(LD_FLAGS) $(C_OBJS) $(BOOT_OBJS) $(LIBC) $(INCBIN_OBJS) -o bin/kernel.bin && \
+build: $(C_OBJS) $(BOOT_OBJS) $(INCBIN_OBJS) $(AS_OBJS)
+	$(LD) -n $(LD_FLAGS) $(C_OBJS) $(BOOT_OBJS) $(LIBC) $(AS_OBJS) $(INCBIN_OBJS) -o bin/kernel.bin && \
 	cp bin/kernel.bin iso/boot/kernel.bin && \
 	grub-mkrescue iso -o lzlos.iso
 

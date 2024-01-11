@@ -8,6 +8,7 @@
 #include "sys.h"
 #include "vga.h"
 #include "interrupts.h"
+#include "scheduler.h"
 
 extern uint8_t test_bin[] asm("_binary_src_incbin_test_bin_start");
 extern uint8_t test_size[] asm("_binary_src_incbin_test_bin_size");
@@ -31,10 +32,6 @@ void kernel_main(int mbi) {
 
 	// Enable maskable interrupts
 	set_interrupts();	
-
-	for (size_t i = 0; i < (size_t)test_size; i++) {
-		kprintf("%c", test_bin[i]);
-	}
 
 	//vga_putc('a');
 }
