@@ -13,7 +13,7 @@
 extern uint8_t test_bin[] asm("_binary_src_incbin_test_bin_start");
 extern uint8_t test_size[] asm("_binary_src_incbin_test_bin_size");
 
-void kernel_main(int mbi) {
+extern "C" void kernel_main(int mbi) {
 	// Remap after hardware NMIs
 	pic_remap(0x20, 0x28);
 	

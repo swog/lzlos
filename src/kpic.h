@@ -7,10 +7,10 @@
 #define PIC_EOI 0x20
 
 // Output byte to IO port
-void io_outb(int port, int byte);
+extern "C" void io_outb(int port, int byte);
 
 // Input byte from IO port.
-int io_inb(int port);
+extern "C" int io_inb(int port);
 
 // Turned into macro since it would just call outb.
 #define io_wait() io_outb(0x80, 0)

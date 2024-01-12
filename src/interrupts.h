@@ -28,7 +28,7 @@ typedef struct kisrcall_s kisrcall_t;
 typedef int kinterrupt_t(kisrcall_t* info);
 
 // Main interrupt handler called from idt.asm
-void kernel_isrhandler(kisrcall_t* info);
+extern "C" void kernel_isrhandler(kisrcall_t* info);
 
 // Called in kernel_main
 // Initializes interrupt table

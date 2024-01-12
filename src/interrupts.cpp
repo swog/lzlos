@@ -95,7 +95,7 @@ void kernel_interrupts_set(unsigned char num, kinterrupt_t* func) {
 }
 
 // Handle kernel interrupt vectors
-void kernel_isrhandler(kisrcall_t* info) {
+extern "C" void kernel_isrhandler(kisrcall_t* info) {
 	// Halt if there is no interrupt handler, or the handler failed to resume execution.
 	kinterrupt_t* func = kernel_interrupts_get(info->isr_number);
 	if (func) {

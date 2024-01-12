@@ -34,11 +34,11 @@ typedef struct kisrcall_s {
 	uint64_t ss;
 } kisrcall_t;
 
-void set_cr3(void *pagetable);
-void set_cr8(void *cr8);
+extern "C" void set_cr3(void *pagetable);
+extern "C" void set_cr8(void *cr8);
 
 // Enable maskable interrupts
-void set_interrupts();
+extern "C" void set_interrupts();
 
 // LIBC unsigned long to string.
 size_t ulltostr(unsigned long long num, int base, char* dst, size_t size); 

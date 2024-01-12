@@ -3,7 +3,7 @@ AS := nasm
 AS_FLAGS := -f elf64
 
 # Compiler
-CC := gcc
+CC := g++
 CC_FLAGS := -nostdlib -nodefaultlibs -ffreestanding -Wall -fno-stack-protector
 
 # This is the gnu linker
@@ -16,13 +16,13 @@ OBJCOPY := objcopy
 BOOT_FILES := $(shell find src/boot -maxdepth 1 -name *.asm)
 BOOT_OBJS := $(patsubst src/%.asm, bin/%.o, $(BOOT_FILES))
 
-C_FILES := $(shell find src -maxdepth 1 -name *.c)
-C_OBJS := $(patsubst src/%.c, bin/%.o, $(C_FILES))
+C_FILES := $(shell find src -maxdepth 1 -name *.cpp)
+C_OBJS := $(patsubst src/%.cpp, bin/%.o, $(C_FILES))
 AS_FILES := $(shell find src -maxdepth 1 -name *.asm)
 AS_OBJS := $(patsubst src/%.asm, bin/%.o, $(AS_FILES))
 
-LIBC_FILES := $(shell find src/libgcc -name *.c)
-LIBC_OBJS := $(patsubst src/%.c, bin/%.o, $(LIBC_FILES))
+LIBC_FILES := $(shell find src/libgcc -name *.cpp)
+LIBC_OBJS := $(patsubst src/%.cpp, bin/%.o, $(LIBC_FILES))
 
 LIBC_FILES_AS := $(shell find src/libgcc -name *.asm)
 LIBC_OBJS_AS := $(patsubst src/%.asm, bin/%.o, $(LIBC_FILES_AS))
@@ -43,7 +43,7 @@ $(BOOT_OBJS) $(LIBC_OBJS_AS): $(BOOT_FILES) $(LIBC_FILES_AS)
 # Compile c kernel files
 $(C_OBJS): $(C_FILES)
 	mkdir -p $(dir $@) && \
-	$(CC) -c $(CC_FLAGS) $(patsubst bin/%.o, src/%.c, $@) -o $@
+	$(CC) -c $(CC_FLAGS) $(patsubst bin/%.o, src/%.cpp, $@) -o $@
 
 $(AS_OBJS): $(AS_FILES)
 	$(AS) -felf64 $(patsubst bin/%.o, src/%.asm, $@) -o $@
@@ -51,7 +51,7 @@ $(AS_OBJS): $(AS_FILES)
 # Compile libc c files
 $(LIBC_OBJS): $(LIBC_FILES)
 	mkdir -p $(dir $@) && \
-	$(CC) -c $(CC_FLAGS) -I./src $(patsubst bin/%.o, src/%.c, $@) -o $@
+	$(CC) -c $(CC_FLAGS) -I./src $(patsubst bin/%.o, src/%.cpp, $@) -o $@
 
 # Link all libc prerequisite object files into a static library
 .PHONY: build-libgcc

@@ -1,7 +1,6 @@
 //
 // Kernel keyboard module
 //
-
 #include "kdefs.h"
 #include "vga.h"
 #include "kbd.h"
