@@ -32,7 +32,7 @@ void kbd_main() {
 }
 
 int kbd_irq(kisrcall_t *info) {
-	int key = io_inb(0x60);
+	unsigned int key = (unsigned int)io_inb(0x60);
 
 	switch (key) {
 	// L shift release

@@ -10,8 +10,8 @@
 #include "interrupts.h"
 #include "scheduler.h"
 
-extern uint8_t test_bin[] asm("_binary_src_incbin_test_bin_start");
-extern uint8_t test_size[] asm("_binary_src_incbin_test_bin_size");
+extern uint8_t fat_start[] asm("_binary_src_incbin_fat_bin_start");
+extern uint8_t fat_size[] asm("_binary_src_incbin_fat_bin_size");
 
 extern "C" void kernel_main(int mbi) {
 	// Remap after hardware NMIs
@@ -32,6 +32,10 @@ extern "C" void kernel_main(int mbi) {
 
 	// Enable maskable interrupts
 	set_interrupts();	
+
+	for (int i = 0; i < 10; i++) {
+		printf("%x\n", fat_start[i]);
+	}
 
 	//vga_putc('a');
 }

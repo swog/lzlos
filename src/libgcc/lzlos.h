@@ -3,6 +3,12 @@
 
 #include <stddef.h> // size_t
 
+#ifdef __cplusplus
+extern "C"
+#endif
+
+int _start();
+
 // Return required-or-used size
 // `dst` can be null.
 // `size` can be null.

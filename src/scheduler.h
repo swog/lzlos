@@ -21,7 +21,11 @@ typedef struct _lzlos_teb {
 	char	name[TEB_NAMESIZE];	// Process name (path), paged
 } lzlos_teb;
 
-extern "C" lzlos_teb* scheduler_task();
+#ifdef __cplusplus
+extern "C"
+#endif
+
+lzlos_teb* scheduler_task();
 
 void scheduler_switch(lzlos_teb* teb);
 

@@ -13,27 +13,42 @@ AR := ar
 # This allows us to create object files out of binaries
 OBJCOPY := objcopy
 
+# Kernel boot assembly files
 BOOT_FILES := $(shell find src/boot -maxdepth 1 -name *.asm)
 BOOT_OBJS := $(patsubst src/%.asm, bin/%.o, $(BOOT_FILES))
 
+# Kernel core source files
 C_FILES := $(shell find src -maxdepth 1 -name *.cpp)
 C_OBJS := $(patsubst src/%.cpp, bin/%.o, $(C_FILES))
 AS_FILES := $(shell find src -maxdepth 1 -name *.asm)
 AS_OBJS := $(patsubst src/%.asm, bin/%.o, $(AS_FILES))
 
+# LIBC source files
+# These need to be built first before linking.
 LIBC_FILES := $(shell find src/libgcc -name *.cpp)
 LIBC_OBJS := $(patsubst src/%.cpp, bin/%.o, $(LIBC_FILES))
-
 LIBC_FILES_AS := $(shell find src/libgcc -name *.asm)
 LIBC_OBJS_AS := $(patsubst src/%.asm, bin/%.o, $(LIBC_FILES_AS))
+
+# LIBC must be added at the end of any list of objects
+LIBC := -L./bin -lgcc
+LD_FLAGS := -T linker.ld 
 
 # Included binary files into objects
 INCBIN := $(shell find src/incbin -name *.bin)
 INCBIN_OBJS := $(patsubst src/incbin/%.bin, bin/incbin/%.o, $(INCBIN))
 
-# LIBC must be added at the end of any list of objects
-LIBC := -L./bin -lgcc
-LD_FLAGS := -T linker.ld 
+# All subdirectories in /drivers
+DRIVERS := $(shell find src/drivers/ -mindepth 1 -type d)
+DRIVERS_OBJS := $(patsubst src/drivers/%, bin/drivers/%, $(DRIVERS))
+
+$(DRIVERS_OBJS): $(DRIVERS)
+	mkdir -p $@ && \
+	$(CC) -c $(shell find $? -name *.cpp) -o $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) && \
+	$(LD) $(LIBC) $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $(patsubst bin/drivers/%, src/incbin/%.bin, $@)
+
+.PHONY: drivers
+drivers: build-libgcc $(DRIVERS_OBJS)	
 
 # Assemble assembly files
 $(BOOT_OBJS) $(LIBC_OBJS_AS): $(BOOT_FILES) $(LIBC_FILES_AS)
@@ -61,7 +76,7 @@ build-libgcc: $(LIBC_OBJS) $(LIBC_OBJS_AS)
 # This won't run if the prerequisites aren't updated.
 # Target is object files
 # Prerequisite is incbin binary
-$(INCBIN_OBJS): $(INCBIN)
+$(INCBIN_OBJS): $(INCBIN) drivers
 	mkdir -p $(dir $@) && \
 	$(OBJCOPY) -B i386:x86-64 -I binary -O elf64-x86-64 $(patsubst bin/incbin/%.o, src/incbin/%.bin, $@) $@
 
@@ -76,7 +91,7 @@ build: $(C_OBJS) $(BOOT_OBJS) $(INCBIN_OBJS) $(AS_OBJS)
 	grub-mkrescue iso -o lzlos.iso
 
 .PHONY: all
-all: build-libgcc build-incbin build
+all: build-libgcc drivers build-incbin build
 
 .PHONY: clean
 clean:
@@ -86,9 +101,4 @@ clean:
 .PHONY: run
 run:
 	qemu-system-x86_64 -cdrom lzlos.iso
-
-.PHONY: test
-test:
-	gcc -Wall -std=gnu99 -D DEBUG src/mmap.c -o bin/test/a.out && \
-	./bin/test/a.out
 
