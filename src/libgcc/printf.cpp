@@ -30,9 +30,9 @@ int _vprintf(const char* format, va_list ap, putchar_t putchar, fwrite_t fwrite)
 				putchar('-');
 			}
 			size_t len = ulltostr((unsigned long long)num, 10, NULL, 0);
-			if (len < sizeof(buf)) {
+			if (len < sizeof(buf) && len > 0) {
 				ulltostr((unsigned long long)num, 10, buf, len);
-				fwrite(buf, len, 1, stdout);
+				fwrite(buf, len-1, 1, stdout);
 			}
 			i++;
 		} break;
@@ -41,9 +41,9 @@ int _vprintf(const char* format, va_list ap, putchar_t putchar, fwrite_t fwrite)
 			char buf[32];
 			size_t num = va_arg(ap, size_t);
 			size_t len = ulltostr((unsigned long long)num, 16, NULL, 0);
-			if (len < sizeof(buf)) {
+			if (len < sizeof(buf) && len > 0) {
 				ulltostr((unsigned long long)num, 16, buf, len);
-				fwrite(buf, len, 1, stdout);
+				fwrite(buf, len-1, 1, stdout);
 			}
 			i++;
 		} break;

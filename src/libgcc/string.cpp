@@ -178,11 +178,12 @@ int memcmp(const void* ptr1, const void* ptr2, size_t num) {
 char *strcpy(char *dst, const char *src) {
 	char *ptr = dst;
 
-	if (*src) {
-		do {
-			*ptr++ = *src++;
-		} while (*src);
+	while (*src) {
+		*ptr = *src;
+		src++;
 	}
+
+	*ptr = 0;
 
 	return dst;
 }

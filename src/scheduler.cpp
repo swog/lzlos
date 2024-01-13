@@ -1,4 +1,7 @@
 #include "scheduler.h"
+#include "kdefs.h"
+
+// Temporary implementation
 
 lzlos_teb current_teb;
 

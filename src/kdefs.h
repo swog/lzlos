@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <memory.h>
 
 #define EXPORT __attribute__((visibility("default")))
 #define PACKED __attribute__((packed))
@@ -34,11 +35,13 @@ typedef struct kisrcall_s {
 	uint64_t ss;
 } kisrcall_t;
 
-extern "C" void set_cr3(void *pagetable);
-extern "C" void set_cr8(void *cr8);
+extern "C" {
+	void set_cr3(void *pagetable);
+	void set_cr8(void *cr8);
 
-// Enable maskable interrupts
-extern "C" void set_interrupts();
+	// Enable maskable interrupts
+	void set_interrupts();
+}
 
 // LIBC unsigned long to string.
 size_t ulltostr(unsigned long long num, int base, char* dst, size_t size); 
@@ -55,4 +58,63 @@ size_t ulltostr(unsigned long long num, int base, char* dst, size_t size);
 #define ARRAYSIZE(x) (sizeof(x) / sizeof(x[0]))
 #endif
 
+#define TEB_BUSY 1
+#define TEB_NAMESIZE 256
+
+// LZLOS Thread Environment Block
+typedef struct _lzlos_teb {
+	//   Don't change these offsets. They are hard
+	// coded into the scheduler_main.asm file
+	size_t 	image_size;		// Process image size
+	void* 	image_base; 		// Process virtual address
+	void*	stack;			// Virtual address
+	void*	pagetable;		// Page table linear address
+	
+	struct _lzlos_teb* prev;
+	struct _lzlos_teb* next;
+	unsigned char	flags;		// Busy, etc
+	unsigned char	priority;	// Higher priority
+	size_t		uptime;		// CPU time
+	char	name[TEB_NAMESIZE];	// Process name (path), paged
+} lzlos_teb;
+
+class CLzlosTeb {
+public:
+	// Teb's are defined with constants.
+	// Having a constant string of size > TEB_NAMESIZE,
+	// a warning?
+	CLzlosTeb(const char Name[TEB_NAMESIZE], size_t ImageSize, void* ImageBase) {
+		memset(&teb, 0, sizeof(teb));
+		teb.image_size = ImageSize;
+		teb.image_base = ImageBase;
+		strcpy(teb.name, Name);
+	}
+
+	operator lzlos_teb&() {
+		return teb;
+	}
+
+	lzlos_teb teb;
+};
+
+//   Spec for backwards compatibility:
+// 1. Object must be named Name##_driver
+// 2. Variable names are finicky to work, keep asm and types.
+// 3. Size and Start must be type uint8_t[].
+#define DRIVER_DEFINE(Name) \
+	extern uint8_t Name##_size[] asm("_binary_src_incbin_" #Name "_bin_size"); \
+	extern uint8_t Name##_start[] asm("_binary_src_incbin_" #Name "_bin_start"); \
+	lzlos_teb Name##_driver = {(size_t)Name##_size, Name##_start, NULL, NULL, NULL, NULL, 0, 0, 0, #Name}
+
+// Backwards compatibility with C code (thanks William)
+// Spec: Must be a pointer to lzlos_teb*
+#define DRIVER_TEB(Name) \
+	((lzlos_teb*)(&Name##_driver))
+
 #endif
+
+
+
+
+
+

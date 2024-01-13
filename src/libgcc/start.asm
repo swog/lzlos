@@ -10,9 +10,9 @@ global _start
 _start:
 	call main
 
-	; Call exit(0)
+	; Give rax main return value to _exit
+	mov rdi, rax
 	mov rax, 0x60
-	mov rdi, EXIT_SUCCESS
 	int 0x80
 
 	ret

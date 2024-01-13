@@ -10,8 +10,7 @@
 #include "interrupts.h"
 #include "scheduler.h"
 
-extern uint8_t fat_start[] asm("_binary_src_incbin_fat_bin_start");
-extern uint8_t fat_size[] asm("_binary_src_incbin_fat_bin_size");
+DRIVER_DEFINE(fat);
 
 extern "C" void kernel_main(int mbi) {
 	// Remap after hardware NMIs
@@ -33,9 +32,7 @@ extern "C" void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
-	for (int i = 0; i < 10; i++) {
-		printf("%x\n", fat_start[i]);
-	}
+	printf("%x %s\n", DRIVER_TEB(fat)->image_size, DRIVER_TEB(fat)->name);
 
 	//vga_putc('a');
 }
