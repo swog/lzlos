@@ -9,6 +9,7 @@
 #include "vga.h"
 #include "interrupts.h"
 #include "scheduler.h"
+#include "elf64.h"
 
 DRIVER_DEFINE(fat);
 
@@ -32,7 +33,7 @@ extern "C" void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
-	printf("%x %s\n", DRIVER_TEB(fat)->image_size, DRIVER_TEB(fat)->name);
+	
 
 	//vga_putc('a');
 }

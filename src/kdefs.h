@@ -100,7 +100,7 @@ public:
 //   Spec for backwards compatibility:
 // 1. Object must be named Name##_driver
 // 2. Variable names are finicky to work, keep asm and types.
-// 3. Size and Start must be type uint8_t[].
+// 3. Size and Start must be type uint8_t[] and must be named Name##_size, Name##_start respectively.
 #define DRIVER_DEFINE(Name) \
 	extern uint8_t Name##_size[] asm("_binary_src_incbin_" #Name "_bin_size"); \
 	extern uint8_t Name##_start[] asm("_binary_src_incbin_" #Name "_bin_start"); \
