@@ -2,6 +2,7 @@
 #define _LIBGCC_LZLOS_H
 
 #include <stddef.h> // size_t
+#include <errno.h>
 
 #ifdef __cplusplus
 extern "C"

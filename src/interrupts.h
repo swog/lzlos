@@ -3,25 +3,12 @@
 
 typedef struct kisrcall_s kisrcall_t;
 
-#ifndef IRQ_TIMER
-#define IRQ_TIMER 0x20
-#endif
+#define IRQ_TIMER 	0x20
+#define IRQ_KEYBOARD 	0x21
+#define IRQ_SYSCALL 	0x80
 
-#ifndef IRQ_KEYBOARD
-#define IRQ_KEYBOARD 0x21
-#endif
-
-#ifndef IRQ_SYSCALL
-#define IRQ_SYSCALL 0x80
-#endif
-
-#ifndef IRQ_FAILURE
-#define IRQ_FAILURE 0
-#endif
-
-#ifndef IRQ_SUCCESS
-#define IRQ_SUCCESS 1
-#endif
+#define IRQ_FAILURE 	0
+#define IRQ_SUCCESS 	1
 
 // Return 0 on failure to return execution; halt.
 // Return 1 to continue execution.

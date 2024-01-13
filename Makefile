@@ -4,7 +4,7 @@ AS_FLAGS := -f elf64
 
 # Compiler
 CC := g++
-CC_FLAGS := -nostdlib -nodefaultlibs -ffreestanding -Wall -fno-stack-protector
+CC_FLAGS := -nostdlib -fno-stack-protector
 
 # This is the gnu linker
 LD := ld
@@ -45,7 +45,7 @@ DRIVERS_OBJS := $(patsubst src/drivers/%, bin/drivers/%, $(DRIVERS))
 $(DRIVERS_OBJS): $(DRIVERS)
 	mkdir -p $@ && \
 	$(CC) -c $(shell find $? -name *.cpp) -o $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) && \
-	$(LD) $(LIBC) $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $(patsubst bin/drivers/%, src/incbin/%.bin, $@)
+	$(LD) $(LIBC) $(CC_FLAGS) -shared $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $(patsubst bin/drivers/%, src/incbin/%.bin, $@)
 
 .PHONY: drivers
 drivers: build-libgcc $(DRIVERS_OBJS)	

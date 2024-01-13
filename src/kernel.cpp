@@ -33,7 +33,6 @@ extern "C" void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
-	
 
 	//vga_putc('a');
 }
