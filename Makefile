@@ -39,13 +39,15 @@ INCBIN := $(shell find src/incbin -name *.bin)
 INCBIN_OBJS := $(patsubst src/incbin/%.bin, bin/incbin/%.o, $(INCBIN))
 
 # All subdirectories in /drivers
+# Bug fix: DRIVER_OBJS targets must be src/incbin/%.bin for clocks to work.
+# These then route into INCBIN_OBJS. 
 DRIVERS := $(shell find src/drivers/ -mindepth 1 -type d)
-DRIVERS_OBJS := $(patsubst src/drivers/%, bin/drivers/%, $(DRIVERS))
+DRIVERS_OBJS := $(patsubst src/drivers/%, src/incbin/%.bin, $(DRIVERS))
 
 $(DRIVERS_OBJS): $(DRIVERS)
-	mkdir -p $@ && \
+	mkdir -p $(patsubst src/drivers/%, bin/drivers/%, $?) && \
 	$(CC) -c $(shell find $? -name *.cpp) -o $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) && \
-	$(LD) $(LIBC) $(CC_FLAGS) -shared $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $(patsubst bin/drivers/%, src/incbin/%.bin, $@)
+	$(LD) $(LIBC) $(CC_FLAGS) -shared $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $@
 
 .PHONY: drivers
 drivers: build-libgcc $(DRIVERS_OBJS)	
@@ -85,7 +87,7 @@ $(INCBIN_OBJS): $(INCBIN) drivers
 build-incbin: $(INCBIN_OBJS)
 
 .PHONY: build
-build: $(C_OBJS) $(BOOT_OBJS) $(INCBIN_OBJS) $(AS_OBJS)
+build: $(C_OBJS) $(BOOT_OBJS) $(INCBIN_OBJS) $(AS_OBJS) drivers 
 	$(LD) -n $(LD_FLAGS) $(C_OBJS) $(BOOT_OBJS) $(LIBC) $(AS_OBJS) $(INCBIN_OBJS) -o bin/kernel.bin && \
 	cp bin/kernel.bin iso/boot/kernel.bin && \
 	grub-mkrescue iso -o lzlos.iso
