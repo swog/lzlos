@@ -5,12 +5,10 @@
 
 typedef struct _lzlos_teb lzlos_teb;
 
-#ifdef __cplusplus
-extern "C"
-#endif
-
-lzlos_teb* scheduler_task();
+extern "C" lzlos_teb* scheduler_task();
 
 void scheduler_switch(lzlos_teb* teb);
+
+void scheduler_insert(lzlos_teb* teb);
 
 #endif
