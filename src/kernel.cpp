@@ -9,9 +9,12 @@
 #include "vga.h"
 #include "interrupts.h"
 #include "scheduler.h"
-#include "elf64.h"
+#include "elf.h"
+#include "libelf.h"
 
 DRIVER_DEFINE(fat);
+
+extern char _ehdr;
 
 extern "C" void kernel_main(int mbi) {
 	// Remap after hardware NMIs
@@ -33,6 +36,7 @@ extern "C" void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
+	printf("%p\n", elf_magic(0x100000, (Elf64_Ehdr*)&_ehdr));
 
 	//vga_putc('a');
 }

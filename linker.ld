@@ -10,6 +10,11 @@ SECTIONS {
 		KEEP(*(.boot))
 	}
 
+	_ehdr = .;
+	.ehdr : {
+		KEEP(*(.ehdr))
+	}
+
 	.text : {
 		*(.text)
 	}
