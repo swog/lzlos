@@ -8,6 +8,7 @@
 #define EXPORT __attribute__((visibility("default")))
 #define PACKED __attribute__((packed))
 #define ALIGNED(x) __attribute__((aligned(x)))
+#define EXTERN_C extern "C"
 
 // Interrupt service routine's stack
 typedef struct kisrcall_s {
@@ -58,8 +59,8 @@ size_t ulltostr(unsigned long long num, int base, char* dst, size_t size);
 #define ARRAYSIZE(x) (sizeof(x) / sizeof(x[0]))
 #endif
 
-#define TEB_BUSY 1
-#define TEB_NAMESIZE 256
+#define TEB_BUSY 	1
+#define TEB_NAMESIZE 	256
 
 // LZLOS Thread Environment Block
 typedef struct _lzlos_teb {

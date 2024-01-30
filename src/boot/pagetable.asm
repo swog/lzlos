@@ -18,7 +18,14 @@ page_table_l3:
 	resb 4096
 page_table_l2:
 	resb 4096
-page_table_l1:
+global page_table_64_l4
+page_table_64_l4:
+	resb 4096
+global page_table_64_l3
+page_table_64_l3:
+	resb 4096
+global page_table_64_l2
+page_table_64_l2:
 	resb 4096
 
 section .text

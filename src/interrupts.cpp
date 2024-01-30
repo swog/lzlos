@@ -99,8 +99,7 @@ extern "C" void kernel_isrhandler(kisrcall_t* info) {
 	// Halt if there is no interrupt handler, or the handler failed to resume execution.
 	kinterrupt_t* func = kernel_interrupts_get(info->isr_number);
 	if (func) {
-	
-		if (func(info) == IRQ_FAILURE) {
+		if (func(info) != IRQ_SUCCESS) {
 			kprintf("Interrupt handler resulted in failure.\n");
 			//print_info(info);
 			asm("hlt");

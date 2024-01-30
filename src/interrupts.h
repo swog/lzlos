@@ -7,10 +7,10 @@ typedef struct kisrcall_s kisrcall_t;
 #define IRQ_KEYBOARD 	0x21
 #define IRQ_SYSCALL 	0x80
 
-#define IRQ_FAILURE 	0
-#define IRQ_SUCCESS 	1
+#define IRQ_SUCCESS	0
+#define IRQ_FAILURE 	1
 
-// Return 0 on failure to return execution; halt.
+// Return 0 success
 // Return 1 to continue execution.
 typedef int kinterrupt_t(kisrcall_t* info);
 

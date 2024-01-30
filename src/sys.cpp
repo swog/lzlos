@@ -3,6 +3,7 @@
 #include "sys.h"
 #include "vga.h"
 #include "interrupts.h"
+#include "mmap.h"
 
 size_t kfread(void* buf, size_t size, size_t count, FILE* f) {
 	return 0;
@@ -31,13 +32,10 @@ size_t kfclose(FILE* f) {
 } 
 
 // SYS_EXECVE 0x59
-int kexecve(const char* path, char* const argv[], char* const envp[]) {
-	return 0;
-}
+int kexecve(const char* path, char* const argv[], char* const envp[]);
 
 // SYS_EXIT 0x60
-void kexit(int status) {
-}
+void kexit(int status);
 
 void ksys_main() {
 	kernel_interrupts_set(IRQ_SYSCALL, ksys_irq);
@@ -62,6 +60,12 @@ int ksys_irq(kisrcall_t* info) {
 	} break;
 	case SYS_EXIT: {
 		kexit((int)info->rdi);
+	} break;
+	case SYS_MMAP: {
+		info->rax = (size_t)kmmap((void*)info->rdi, info->rsi, (int)info->rdx, (int)info->rcx);
+	} break;
+	case SYS_MUNMAP: {
+		info->rax = (int)kmunmap((void*)info->rdi, info->rsi);
 	} break;
 	default:
 		return IRQ_FAILURE;
