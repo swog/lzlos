@@ -78,25 +78,6 @@ typedef struct _lzlos_teb {
 	char	name[TEB_NAMESIZE];	// Process name (path), paged
 } lzlos_teb;
 
-class CLzlosTeb {
-public:
-	// Teb's are defined with constants.
-	// Having a constant string of size > TEB_NAMESIZE,
-	// a warning?
-	CLzlosTeb(const char Name[TEB_NAMESIZE], size_t ImageSize, void* ImageBase) {
-		memset(&teb, 0, sizeof(teb));
-		teb.image_size = ImageSize;
-		teb.image_base = ImageBase;
-		strcpy(teb.name, Name);
-	}
-
-	operator lzlos_teb&() {
-		return teb;
-	}
-
-	lzlos_teb teb;
-};
-
 //   Spec for backwards compatibility:
 // 1. Object must be named Name##_driver
 // 2. Variable names are finicky to work, keep asm and types.

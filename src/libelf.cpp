@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "elf.h"
+#include "libelf.h"
 
 // Check magic numbers
 bool elf_magic(size_t size, const void* base) {
@@ -56,7 +57,12 @@ const void* elf_entry(size_t size, const void* base) {
 
 
 // Program header
+// Pass non-consts into constant function.
 Elf64_Phdr* elf_program(size_t size, void* base, size_t index) {
+	return (Elf64_Phdr*)elf_program(size, (const void*)base, index);
+}
+
+const Elf64_Phdr* elf_program(size_t size, const void* base, size_t index) {
 	if (size < sizeof(Elf64_Ehdr)) {
 		return NULL;
 	}
@@ -73,11 +79,10 @@ Elf64_Phdr* elf_program(size_t size, void* base, size_t index) {
 		return NULL;
 	}
 
-	return (Elf64_Phdr*)(((char*)base)+phoff+tableoff);
+	return (Elf64_Phdr*)(((char*)base)+phoff+tableoff);	
 }
 
-// Section header by index
-Elf64_Shdr* elf_section(size_t size, void* base, size_t index) {
+const Elf64_Shdr* elf_section(size_t size, const void* base, size_t index) {
 	if (size < sizeof(Elf64_Ehdr)) {
 		return NULL;
 	}
@@ -95,6 +100,12 @@ Elf64_Shdr* elf_section(size_t size, void* base, size_t index) {
 	}
 
 	return (Elf64_Shdr*)(((char*)base)+shoff+tableoff);	
+}	
+
+// Section header by index
+// Pass non-const into const function.
+Elf64_Shdr* elf_section(size_t size, void* base, size_t index) {
+	return (Elf64_Shdr*)elf_section(size, (const void*)base, index);
 }
 
 
@@ -112,7 +123,7 @@ size_t elf_section_count(size_t size, const void* base) {
 // Elf64_Shdr's sh_name is an offset into this table.
 const char* elf_section_names(size_t size, const void* base) {
 	size_t strndx = elf_sectionidx_stringtable(size, base);
-	Elf64_Shdr* strshdr = elf_section(size, base, strndx);
+	const Elf64_Shdr* strshdr = elf_section(size, base, strndx);
 
 	if (!strshdr) {
 		return NULL;
@@ -150,13 +161,13 @@ size_t elf_sectionidx_stringtable(size_t size, const void* base) {
 // Get index of symbol table
 size_t elf_sectionidx_sym(size_t size, const void* base) {
 	size_t c = elf_section_count(size, base);
-	Elf64_Shdr* hdr;
+	const Elf64_Shdr* hdr;
 
 	for (size_t i = 0; i < c; i++) {
 		hdr = elf_section(size, base, i);
 
 		if (hdr->sh_type == SHT_SYMTAB) {
-			return hdr;
+			return i;
 		}
 	}
 
@@ -166,12 +177,14 @@ size_t elf_sectionidx_sym(size_t size, const void* base) {
 
 // Symbol table size
 size_t elf_sym_count(size_t size, const void* base) {
+	return -1;
 }
 
 
 
 // Open a handle to the ELF executable.
 void* elf_open_ex(size_t size, void* base) {
+	return NULL;
 }
 
 // Close handle to ELF executable.

@@ -2,15 +2,6 @@
 #define _LIBELF_H
 
 //https://wiki.osdev.org/ELF_Tutorial
-enum {
-	SHT_NULL	= 0,   // Null section
-	SHT_PROGBITS	= 1,   // Program information
-	SHT_SYMTAB	= 2,   // Symbol table
-	SHT_STRTAB	= 3,   // String table
-	SHT_RELA	= 4,   // Relocation (w/ addend)
-	SHT_NOBITS	= 8,   // Not present in file
-	SHT_REL		= 9,   // Relocation (no addend)
-};
 
 // Check magic numbers
 bool elf_magic(size_t size, const void* base);
@@ -36,8 +27,10 @@ const void* elf_entry(size_t size, const void* base);
 
 // Program header table
 Elf64_Phdr* elf_program(size_t size, void* base, size_t index);
+const Elf64_Phdr* elf_program(size_t size, const void* base, size_t index);
 // Section header by index
 Elf64_Shdr* elf_section(size_t size, void* base, size_t index);
+const Elf64_Shdr* elf_section(size_t size, const void* base, size_t index);
 
 
 // Section header count

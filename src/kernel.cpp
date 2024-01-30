@@ -14,8 +14,6 @@
 
 DRIVER_DEFINE(fat);
 
-extern char _ehdr;
-
 extern "C" void kernel_main(int mbi) {
 	// Remap after hardware NMIs
 	pic_remap(0x20, 0x28);
@@ -36,7 +34,7 @@ extern "C" void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
-	printf("%p\n", elf_magic(0x100000, (Elf64_Ehdr*)&_ehdr));
+	printf("%i\n", elf_magic(0x100000, DRIVER_TEB(fat)->image_base));
 
 	//vga_putc('a');
 }
