@@ -34,7 +34,7 @@ extern "C" void kernel_main(int mbi) {
 	// Enable maskable interrupts
 	set_interrupts();	
 
-	printf("%i\n", elf_magic(0x100000, DRIVER_TEB(fat)->image_base));
+	printf("%i\n", elf_magic(DRIVER_TEB(fat)->image_size, DRIVER_TEB(fat)->image_base));
 
 	//vga_putc('a');
 }
