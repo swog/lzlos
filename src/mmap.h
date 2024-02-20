@@ -1,5 +1,5 @@
 
 #include "kdefs.h"
 
-void* kalloc(unsigned int size);
+void* kalloc(size_t size);
 void kfree(void* buf);

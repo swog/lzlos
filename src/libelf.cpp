@@ -147,7 +147,13 @@ const char* elf_section_name(size_t size, const void* base, size_t index) {
 	return names+elf_section(size, base, index)->sh_name;
 }
 
+size_t elf_section_size(size_t size, const void* base, size_t index) {
+	if (size < sizeof(Elf64_Ehdr)) {
+		return -1;
+	}
 
+	return elf_section(size, base, index)->sh_size;
+}
 
 // Section index of the string table.
 size_t elf_sectionidx_stringtable(size_t size, const void* base) {
@@ -173,13 +179,6 @@ size_t elf_sectionidx_sym(size_t size, const void* base) {
 
 	return -1;
 }
-
-
-// Symbol table size
-size_t elf_sym_count(size_t size, const void* base) {
-	return -1;
-}
-
 
 
 // Open a handle to the ELF executable.

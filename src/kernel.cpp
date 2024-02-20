@@ -28,7 +28,7 @@ static void kernel_pagetable_init() {
 	set_cr3(page_table_64_l4);
 }
 
-EXTERN_C void kernel_main() {
+extern "C" void kernel_main() {
 	// Remap after hardware NMIs
 	pic_remap(0x20, 0x28);
 	
@@ -39,6 +39,10 @@ EXTERN_C void kernel_main() {
 
 	// Initialize interrupt handlers
 	kernel_interrupts_main();
+
+	// Initialize 64 bit page table
+	kernel_pagetable_init();
+
 	// Initialize ksys (libc)
 	ksys_main();	
 	// Lastly initialize kbd interrupt handler
@@ -47,9 +51,6 @@ EXTERN_C void kernel_main() {
 
 	// Enable maskable interrupts
 	set_interrupts();	
-
-	// Set 64 bit page table.
-	set_cr3(page_table_64_l4);
 
 	scheduler_main(page_table_64_l4);
 }

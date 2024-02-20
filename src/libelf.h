@@ -32,6 +32,7 @@ const Elf64_Phdr* elf_program(size_t size, const void* base, size_t index);
 Elf64_Shdr* elf_section(size_t size, void* base, size_t index);
 const Elf64_Shdr* elf_section(size_t size, const void* base, size_t index);
 
+size_t elf_section_size(size_t size, const void* base, size_t index);
 
 // Section header count
 size_t elf_section_count(size_t size, const void* base);
@@ -55,6 +56,7 @@ size_t elf_sectionidx_sym(size_t size, const void* base);
 size_t elf_sym_count(size_t size, const void* base);
 
 
+// Prototype
 // Open a handle to the ELF executable.
 void* elf_open_ex(size_t size, void* base);
 // Close handle to ELF executable
