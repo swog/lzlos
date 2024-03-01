@@ -53,6 +53,11 @@ set_cr8:
 	mov cr8, rdi
 	ret
 
+global get_cr3
+get_cr3:
+	mov rax, cr3
+	ret
+
 extern tss
 extern idt_init
 extern gdt64
