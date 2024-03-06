@@ -1,5 +1,6 @@
 #ifndef _LIBELF_H
 #define _LIBELF_H
+#include "elf.h"
 
 //https://wiki.osdev.org/ELF_Tutorial
 
@@ -21,8 +22,8 @@ int elf_machine(size_t size, const void* base);
 // Entry point
 const void* elf_entry(size_t size, const void* base);
 
-
-
+// ELF base address
+size_t elf_base(size_t size, const void* base);
 
 
 // Program header table

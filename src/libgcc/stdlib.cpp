@@ -1,14 +1,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "mmap.h"
+
+// Prime number
+#define STDLIB_HEAP_HMAP_MOD 251
+#define STDLIB_HEAP_HAMP_SIZE 256
+
+static char 	_stdlib_heap[1024];
+static size_t 	_stdlib_heap_pos = 1024;
 
 void* malloc(size_t size) {
-	return kalloc(size);
+	_stdlib_heap_pos -= size;
+	return &_stdlib_heap[_stdlib_heap_pos];
 }
 
 void free(void* base) {
-	return kfree(base);
+	// I'm sure this is what Windows does too
 }
 
 // Return required-or-used size

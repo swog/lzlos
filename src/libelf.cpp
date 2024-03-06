@@ -54,8 +54,6 @@ const void* elf_entry(size_t size, const void* base) {
 
 
 
-
-
 // Program header
 // Pass non-consts into constant function.
 Elf64_Phdr* elf_program(size_t size, void* base, size_t index) {

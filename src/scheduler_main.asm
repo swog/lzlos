@@ -30,7 +30,7 @@ scheduler_switch:
 	push rbp	
 
 	; Current task
-	call scheduler_task
+;	call scheduler_task
 
 	; Save stack pointer
 	mov qword [rax+0x10], rsp

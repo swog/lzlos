@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <memory.h>
+#include "libelf.h"
 
 #define EXPORT __attribute__((visibility("default")))
 #define PACKED __attribute__((packed))
@@ -62,22 +63,32 @@ size_t ulltostr(unsigned long long num, int base, char* dst, size_t size);
 #define TEB_BUSY 	1
 #define TEB_NAMESIZE 	256
 
+struct lzlos_module {
+	// File size & base
+	size_t	fsize;
+	void*	fbase;
+
+	// Image size and base
+	size_t 	isize;
+	void* 	ibase;
+
+	char	name[TEB_NAMESIZE];	// Process name (path), paged
+};
+
 // LZLOS Thread Environment Block
-typedef struct _lzlos_teb {
-	//   Don't change these offsets. They are hard
-	// coded into the scheduler_main.asm file
-	size_t 	image_size;		// Process image size
-	void* 	image_base; 		// Process virtual address
+struct lzlos_teb {	
+	void*	entry;	
 	void*	stack;			// Virtual address
 	void*	pagetable;		// Page table linear address
 	
-	struct _lzlos_teb* prev;
-	struct _lzlos_teb* next;
+	lzlos_teb* prev;
+	lzlos_teb* next;
 	unsigned char	flags;		// Busy, etc
 	unsigned char	priority;	// Higher priority
 	size_t		uptime;		// CPU time
-	char	name[TEB_NAMESIZE];	// Process name (path), paged
-} lzlos_teb;
+
+	lzlos_module* 	mod;	
+};
 
 //   Spec for backwards compatibility:
 // 1. Object must be named Name##_driver
@@ -86,12 +97,19 @@ typedef struct _lzlos_teb {
 #define DRIVER_DEFINE(Name) \
 	extern uint8_t Name##_size[] asm("_binary_src_incbin_" #Name "_bin_size"); \
 	extern uint8_t Name##_start[] asm("_binary_src_incbin_" #Name "_bin_start"); \
-	lzlos_teb Name##_driver = {(size_t)Name##_size, Name##_start, NULL, NULL, NULL, NULL, 0, 0, 0, #Name}
+	lzlos_module Name##_mod = {(size_t)Name##_size, (void*)Name##_start, 0, NULL, #Name}; \
+	lzlos_teb Name##_teb = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, &Name##_mod};
+
+#define DRIVER_MOD(Name) \
+	(DRIVER_TEB(Name)->mod)
+
+#define DRIVER_ENTRY(Name) \
+	(elf_entry(DRIVER_TEB(Name)->mod->fsize, DRIVER_TEB(Name)->mod->fbase))
 
 // Backwards compatibility with C code (thanks William)
 // Spec: Must be a pointer to lzlos_teb*
 #define DRIVER_TEB(Name) \
-	((lzlos_teb*)(&Name##_driver))
+	((lzlos_teb*)(&Name##_teb))
 
 #endif
 

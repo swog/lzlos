@@ -3,7 +3,6 @@
 #include "sys.h"
 #include "vga.h"
 #include "interrupts.h"
-#include "mmap.h"
 
 size_t kfread(void* buf, size_t size, size_t count, FILE* f) {
 	return 0;
@@ -62,10 +61,10 @@ int ksys_irq(kisrcall_t* info) {
 		kexit((int)info->rdi);
 	} break;
 	case SYS_MMAP: {
-		info->rax = (size_t)kmmap((void*)info->rdi, info->rsi, (int)info->rdx, (int)info->rcx);
+		//info->rax = (size_t)kmmap((void*)info->rdi, info->rsi, (int)info->rdx, (int)info->rcx);
 	} break;
 	case SYS_MUNMAP: {
-		info->rax = (int)kmunmap((void*)info->rdi, info->rsi);
+		//info->rax = (int)kmunmap((void*)info->rdi, info->rsi);
 	} break;
 	default:
 		return IRQ_FAILURE;

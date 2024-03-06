@@ -36,20 +36,24 @@ LD_FLAGS := -T linker.ld
 
 # Included binary files into objects
 INCBIN := $(shell find src/incbin -name *.bin)
+# Incbin object files that are actually included into the binary
 INCBIN_OBJS := $(patsubst src/incbin/%.bin, bin/incbin/%.o, $(INCBIN))
 
 # All subdirectories in /drivers
 # Bug fix: DRIVER_OBJS targets must be src/incbin/%.bin for clocks to work.
 # These then route into INCBIN_OBJS. 
 DRIVERS := $(shell find src/drivers/ -mindepth 1 -type d)
+# These drivers get compiled to src/incbin/%driver%.bin
+# Then incbin packages each .bin file into an object file that contains src/incbin/%driver%.bin
+# That object file is then loaded into the kernel binary
 DRIVERS_OBJS := $(patsubst src/drivers/%, src/incbin/%.bin, $(DRIVERS))
 
 $(DRIVERS_OBJS): $(DRIVERS)
 	mkdir -p $(patsubst src/drivers/%, bin/drivers/%, $?) && \
 	$(CC) -c $(shell find $? -name *.cpp) -o $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) && \
-	$(LD) $(LIBC) $(CC_FLAGS) -shared $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $@
+	$(LD) $(CC_FLAGS) $(LIBC) $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $@
 
-.PHONY: drivers
+.bc_start_mainPHONY: drivers
 drivers: build-libgcc $(DRIVERS_OBJS)	
 
 # Assemble assembly files
