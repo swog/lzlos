@@ -4,7 +4,7 @@ AS_FLAGS := -f elf64
 
 # Compiler
 CC := g++
-CC_FLAGS := -nostdlib -fno-stack-protector
+CC_FLAGS := -nostdlib
 
 # This is the gnu linker
 LD := ld
@@ -46,14 +46,19 @@ DRIVERS := $(shell find src/drivers/ -mindepth 1 -type d)
 # These drivers get compiled to src/incbin/%driver%.bin
 # Then incbin packages each .bin file into an object file that contains src/incbin/%driver%.bin
 # That object file is then loaded into the kernel binary
-DRIVERS_OBJS := $(patsubst src/drivers/%, src/incbin/%.bin, $(DRIVERS))
+DRIVERS_OBJS := $(patsubst src/drivers/%, bin/drivers/%.bin, $(DRIVERS))
+DRIVER_INCBIN_OBJS := $(patsubst bin/drivers/%.bin, bin/drivers/%.o, $(DRIVERS_OBJS))
 
 $(DRIVERS_OBJS): $(DRIVERS)
-	mkdir -p $(patsubst src/drivers/%, bin/drivers/%, $?) && \
+	mkdir -p $(patsubst bin/drivers/%.bin, bin/drivers/%, $@) && \
 	$(CC) -c $(shell find $? -name *.cpp) -o $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) && \
-	$(LD) $(CC_FLAGS) $(LIBC) $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $@
+	$(LD) -emain --shared $(CC_FLAGS) $(LIBC) $(patsubst src/%.cpp, bin/%.o, $(shell find $? -name *.cpp)) -o $@
 
-.bc_start_mainPHONY: drivers
+$(DRIVER_INCBIN_OBJS): $(DRIVER_OBJS)
+	mkdir -p bin/drivers && \
+	$(OBJCOPY) -B i386:x86-64 -I binary -O elf64-x86-64 $(patsubst bin/drivers/%.o, bin/drivers/%.bin, $@) $@
+
+.PHONY: drivers
 drivers: build-libgcc $(DRIVERS_OBJS)	
 
 # Assemble assembly files
@@ -82,7 +87,7 @@ build-libgcc: $(LIBC_OBJS) $(LIBC_OBJS_AS)
 # This won't run if the prerequisites aren't updated.
 # Target is object files
 # Prerequisite is incbin binary
-$(INCBIN_OBJS): $(INCBIN) drivers
+$(INCBIN_OBJS): $(INCBIN)
 	mkdir -p $(dir $@) && \
 	$(OBJCOPY) -B i386:x86-64 -I binary -O elf64-x86-64 $(patsubst bin/incbin/%.o, src/incbin/%.bin, $@) $@
 
@@ -91,8 +96,8 @@ $(INCBIN_OBJS): $(INCBIN) drivers
 build-incbin: $(INCBIN_OBJS)
 
 .PHONY: build
-build: $(C_OBJS) $(BOOT_OBJS) $(INCBIN_OBJS) $(AS_OBJS) drivers 
-	$(LD) -n $(LD_FLAGS) $(C_OBJS) $(BOOT_OBJS) $(LIBC) $(AS_OBJS) $(INCBIN_OBJS) -o bin/kernel.bin && \
+build: $(C_OBJS) $(BOOT_OBJS) drivers $(DRIVER_INCBIN_OBJS) $(INCBIN_OBJS) $(AS_OBJS)  
+	$(LD) -n $(LD_FLAGS) $(INCBIN_OBJS) $(C_OBJS) $(BOOT_OBJS) $(LIBC) $(AS_OBJS) $(DRIVER_INCBIN_OBJS) -o bin/kernel.bin && \
 	cp bin/kernel.bin iso/boot/kernel.bin && \
 	grub-mkrescue iso -o lzlos.iso
 

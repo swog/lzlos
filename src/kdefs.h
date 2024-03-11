@@ -95,8 +95,8 @@ struct lzlos_teb {
 // 2. Variable names are finicky to work, keep asm and types.
 // 3. Size and Start must be type uint8_t[] and must be named Name##_size, Name##_start respectively.
 #define DRIVER_DEFINE(Name) \
-	extern uint8_t Name##_size[] asm("_binary_src_incbin_" #Name "_bin_size"); \
-	extern uint8_t Name##_start[] asm("_binary_src_incbin_" #Name "_bin_start"); \
+	extern uint8_t Name##_size[] asm("_binary_bin_drivers_" #Name "_bin_size"); \
+	extern uint8_t Name##_start[] asm("_binary_bin_drivers_" #Name "_bin_start"); \
 	lzlos_module Name##_mod = {(size_t)Name##_size, (void*)Name##_start, 0, NULL, #Name}; \
 	lzlos_teb Name##_teb = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, &Name##_mod};
 

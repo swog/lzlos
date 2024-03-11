@@ -48,7 +48,7 @@ int drv_open(lzlos_teb* teb) {
 	// Copy elf header to image
 	memcpy(teb->mod->ibase, teb->mod->fbase, sizeof(Elf64_Ehdr));
 
-	printf("Open: ImageBase(%p), PhOff(%u), PhEntSize(%u)\n", teb->mod->fbase, eh->e_phoff, eh->e_phentsize);
+	//printf("Open: ImageBase(%p), PhOff(%u), PhEntSize(%u)\n", teb->mod->fbase, (size_t)eh->e_phoff, (size_t)eh->e_phentsize);
 
 	void* text = NULL;
 	void* ph_ptr;
@@ -57,15 +57,20 @@ int drv_open(lzlos_teb* teb) {
 		ph = elf_program(teb->mod->fsize, teb->mod->fbase, i);
 		ph_ptr = (char*)teb->mod->ibase + eh->e_phoff + eh->e_phentsize * i;
 		memcpy(ph_ptr, ph, sizeof(*ph));	
-	
-		// Executable
-		if (ph->p_flags & 1) {
-			printf("1 executable\n");
-			text = ph_ptr;
+	}
+
+	const Elf64_Shdr* sh;
+
+	for (size_t i = 0; i < eh->e_shnum; i++) {
+		sh = elf_section(teb->mod->fsize, teb->mod->fbase, i);
+		if (sh->sh_flags & 4) {
+			text = (char*)teb->mod->fbase + sh->sh_addr;
 		}
 	}
 
 	printf("text: %p\n", text);
+
+	printf("%u\n", *(unsigned char*)text);
 
 	drv_startfn start = (drv_startfn)text;
 
